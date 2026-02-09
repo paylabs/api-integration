@@ -75,39 +75,10 @@ public static class VerifyCallback
 
             var valid = PaylabsSignature.VerifySignature(stringToVerify, signature, publicKey);
 
-            // Broadcast
             var bodyElement = JsonDocument.Parse(rawBody).RootElement;
             var jsonBody = JsonSerializer.Deserialize<object>(rawBody); // For simple object structure
 
-            var sseData = new
-            {
-                headers,
-                body = jsonBody,
-                verificationStatus = valid ? "Valid" : "Invalid"
-            };
-            
-            var sseMessage = $"data: {JsonSerializer.Serialize(sseData)}\n\n";
-
-            await ClientsLock.WaitAsync();
-            try
-            {
-                foreach (var client in Clients)
-                {
-                    try
-                    {
-                        await client.WriteAsync(sseMessage);
-                        await client.FlushAsync();
-                    }
-                    catch
-                    {
-                        // Handle disconnected clients
-                    }
-                }
-            }
-            finally
-            {
-                ClientsLock.Release();
-            }
+            // Broadcast - Removed redundant preliminary broadcast to avoid duplicates
 
             var status = bodyElement.TryGetProperty("status", out var s) ? s.GetString() : "";
             var requestId = bodyElement.TryGetProperty("requestId", out var r) ? r.GetString() : "";
@@ -132,6 +103,7 @@ public static class VerifyCallback
             // Capture and broadcast again with responseBody
             var finalSseData = new
             {
+                id = string.IsNullOrEmpty(requestId) ? Guid.NewGuid().ToString() : requestId,
                 type = "inbound",
                 headers,
                 body = jsonBody,
@@ -184,6 +156,7 @@ public static class VerifyCallback
             // Broadcast
             var sseData = new
             {
+                id = Guid.NewGuid().ToString(), // SNAP use Guid as requestId might not be in root
                 type = "inbound",
                 headers,
                 body = jsonBody,
@@ -238,40 +211,10 @@ public static class VerifyCallback
 
             var valid = PaylabsSignature.VerifySignature(stringToVerify, signature, publicKey);
 
-            // Broadcast
             var bodyElement = JsonDocument.Parse(rawBody).RootElement;
             var jsonBody = JsonSerializer.Deserialize<object>(rawBody);
 
-            var sseData = new
-            {
-                headers,
-                body = jsonBody,
-                endpoint = "/transfer-va/payment",
-                verificationStatus = valid ? "Valid" : "Invalid"
-            };
-            
-            var sseMessage = $"data: {JsonSerializer.Serialize(sseData)}\n\n";
-
-            await ClientsLock.WaitAsync();
-            try
-            {
-                foreach (var client in Clients)
-                {
-                    try
-                    {
-                        await client.WriteAsync(sseMessage);
-                        await client.FlushAsync();
-                    }
-                    catch
-                    {
-                        // Handle disconnected clients
-                    }
-                }
-            }
-            finally
-            {
-                ClientsLock.Release();
-            }
+            // Broadcast - Removed redundant preliminary broadcast to avoid duplicates
 
             if (!valid)
             {
@@ -313,6 +256,7 @@ public static class VerifyCallback
             // Update SSE with responseBody
             var finalSseData = new
             {
+                id = bodyElement.TryGetProperty("paymentRequestId", out var pr) ? pr.GetString() : Guid.NewGuid().ToString(),
                 type = "inbound",
                 headers,
                 body = jsonBody,

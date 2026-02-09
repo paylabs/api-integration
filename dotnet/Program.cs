@@ -23,8 +23,8 @@ if (cmdArgs.Length > 1 && cmdArgs[1] == "callback")
 else
 {
     // Run QRIS creation
-    // await GenerateTransaction.CreateQRIS();
-await GenerateTransaction.CreateSnapTransaction();
+    await GenerateTransaction.CreateQRIS();
+    // await GenerateTransaction.CreateSnapTransaction();
 }
 
 // Simple .env file loader
