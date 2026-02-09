@@ -8,7 +8,7 @@ use rsa::pkcs8::DecodePublicKey;
 use rsa::sha2::Sha256;
 use rsa::{Pkcs1v15Sign, RsaPublicKey};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 use sha2::{Digest, Sha256 as Sha256Hasher};
 use std::env;
 use std::sync::Arc;
@@ -130,29 +130,29 @@ async fn callback_handler(
 
     let response_data = if status != "02" {
         json!(CallbackResponse {
-            request_id,
+            request_id: request_id.clone(),
             err_code: "1".to_string(),
             err_code_des: "Payment not completed".to_string(),
-            merchant_id,
+            merchant_id: merchant_id.clone(),
         })
     } else {
         json!(CallbackResponse {
-            request_id,
+            request_id: request_id.clone(),
             err_code: "0".to_string(),
             err_code_des: "Success".to_string(),
-            merchant_id,
+            merchant_id: merchant_id.clone(),
         })
     };
 
     // Broadcast with responseBody
     let sse_data = json!({
-        "id": if request_id.is_empty() { uuid::Uuid::new_v4().to_string() } else { request_id },
+        "id": if request_id.is_empty() { uuid::Uuid::new_v4().to_string() } else { request_id.clone() },
         "type": "inbound",
         "headers": headers_map,
-        "body": body_json,
+        "body": body_json.clone(),
         "endpoint": "/callback",
         "verificationStatus": if valid { "Valid" } else { "Invalid" },
-        "response_body": response_data
+        "responseBody": response_data.clone()
     });
     let _ = state.tx.send(sse_data.to_string());
 
@@ -199,7 +199,7 @@ async fn snap_callback_handler(
         "trxDateTime", "freeTexts", "paymentFlagStatus"
     ];
 
-    let mut filtered_body = serde_json::Map::new();
+    let mut filtered_body: serde_json::Map<String, Value> = serde_json::Map::new();
     if let Some(obj) = body_json.as_object() {
         for field in allowed_fields {
             if let Some(val) = obj.get(field) {
@@ -222,10 +222,10 @@ async fn snap_callback_handler(
         "id": if payment_request_id.is_empty() { uuid::Uuid::new_v4().to_string() } else { payment_request_id.to_string() },
         "type": "inbound",
         "headers": headers_map,
-        "body": body_json,
+        "body": body_json.clone(),
         "endpoint": "/transfer-va/payment",
         "verificationStatus": if valid { "Valid" } else { "Invalid" },
-        "response_body": response_data
+        "responseBody": response_data.clone()
     });
     let _ = state.tx.send(sse_data.to_string());
 
@@ -282,10 +282,10 @@ async fn snap_create_va_handler(
         "id": if payment_request_id.is_empty() { uuid::Uuid::new_v4().to_string() } else { payment_request_id.to_string() },
         "type": "inbound",
         "headers": headers_map,
-        "body": body_json,
+        "body": body_json.clone(),
         "endpoint": "/api/v1.0/transfer-va/create-va",
         "verificationStatus": if valid { "Valid" } else { "Invalid" },
-        "response_body": response_data
+        "responseBody": response_data.clone()
     });
     let _ = state.tx.send(sse_data.to_string());
 
