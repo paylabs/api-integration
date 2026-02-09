@@ -22,12 +22,36 @@ fn sha256_hex(data: &str) -> String {
 }
 
 fn verify_signature(string_to_verify: &str, signature_base64: &str, public_key_pem: &str) -> bool {
-    let public_key_pem = public_key_pem.replace("\\n", "\n");
+    let clean_key = public_key_pem
+        .trim()
+        .trim_matches('"')
+        .replace("\\n", "\n")
+        .replace("\\r", "");
 
-    let public_key = match RsaPublicKey::from_public_key_pem(&public_key_pem) {
+    // Extract the Base64 content between headers
+    let b64_content = clean_key
+        .replace("-----BEGIN PUBLIC KEY-----", "")
+        .replace("-----END PUBLIC KEY-----", "")
+        .replace("\n", "")
+        .replace("\r", "")
+        .replace(" ", "")
+        .trim()
+        .to_string();
+
+    // Decode Base64 to DER bytes
+    let der_bytes = match STANDARD.decode(&b64_content) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            println!("Failed to decode public key Base64: {}", e);
+            return false;
+        }
+    };
+
+    // Parse the Public Key from DER (SubjectPublicKeyInfo)
+    let public_key = match RsaPublicKey::from_public_key_der(&der_bytes) {
         Ok(key) => key,
         Err(e) => {
-            println!("Failed to parse public key: {}", e);
+            println!("Failed to parse public key from DER: {}", e);
             return false;
         }
     };
