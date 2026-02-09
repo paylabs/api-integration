@@ -25,7 +25,7 @@ Pilih bahasa pemrograman yang sesuai dengan tumpukan teknologi Anda:
 
 1. Clone repositori ini:
    ```bash
-   git clone https://github.com/ahmadeko2017/paylabs-quick-start-guide.git
+   git clone https://github.com/paylabs/api-integration.git
    cd paylabs-quick-start-guide
    ```
 2. Pilih direktori bahasa yang diinginkan.
