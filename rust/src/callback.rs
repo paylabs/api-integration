@@ -123,6 +123,11 @@ async fn callback_handler(
 
     let valid = verify_signature(&string_to_verify, signature, &public_key);
 
+    let body_json: Value = serde_json::from_slice(&body).unwrap_or(json!({}));
+    let status = body_json["status"].as_str().unwrap_or("");
+    let request_id = body_json["requestId"].as_str().unwrap_or("").to_string();
+    let merchant_id = body_json["merchantId"].as_str().unwrap_or("").to_string();
+
     let response_data = if status != "02" {
         json!(CallbackResponse {
             request_id,
@@ -183,6 +188,24 @@ async fn snap_callback_handler(
     println!("SNAP String to Verify: {}", string_to_verify);
 
     let valid = verify_signature(&string_to_verify, signature, &public_key);
+    let body_json: Value = serde_json::from_slice(&body).unwrap_or(json!({}));
+
+    let allowed_fields = vec![
+        "paidBills", "virtualAccountNo", "paymentRequestId", "partnerServiceId",
+        "virtualAccountPhone", "virtualAccountName", "journalNum", "flagAdvise",
+        "trxId", "paymentFlagReason", "virtualAccountEmail", "billDetails",
+        "totalAmount", "customerNo", "paymentType", "paidAmount", "referenceNo",
+        "trxDateTime", "freeTexts", "paymentFlagStatus"
+    ];
+
+    let mut filtered_body = serde_json::Map::new();
+    if let Some(obj) = body_json.as_object() {
+        for field in allowed_fields {
+            if let Some(val) = obj.get(field) {
+                filtered_body.insert(field.to_string(), val.clone());
+            }
+        }
+    }
 
     filtered_body.insert("paymentFlagStatus".to_string(), json!("00"));
 
@@ -198,11 +221,74 @@ async fn snap_callback_handler(
         "headers": headers_map,
         "body": body_json,
         "endpoint": "/transfer-va/payment",
-        "verificationStatus": "Valid",
+        "verificationStatus": if valid { "Valid" } else { "Invalid" },
         "responseBody": response_data
     });
     let _ = state.tx.send(sse_data.to_string());
 
+    if !valid {
+        return HttpResponse::Unauthorized().json(json!({
+            "responseCode": "4010000",
+            "responseMessage": "Unauthorized"
+        }));
+    }
+
+    println!("SNAP Signature is valid");
+    HttpResponse::Ok().json(response_data)
+}
+
+async fn snap_create_va_handler(
+    req: HttpRequest,
+    body: web::Bytes,
+    state: web::Data<AppState>,
+) -> HttpResponse {
+    let signature = req.headers().get("X-Signature").and_then(|v| v.to_str().ok()).unwrap_or("");
+    let timestamp = req.headers().get("X-Timestamp").and_then(|v| v.to_str().ok()).unwrap_or("");
+    let public_key = env::var("PAYLABS_PUBLIC_KEY").unwrap_or_default();
+
+    println!("Incoming SNAP Create VA Headers:");
+    let mut headers_map = serde_json::Map::new();
+    for (name, value) in req.headers() {
+        println!("  {}: {:?}", name, value);
+        if let Ok(v) = value.to_str() {
+            headers_map.insert(name.to_string(), json!(v));
+        }
+    }
+
+    let raw_body = String::from_utf8_lossy(&body);
+    let sha_json = sha256_hex(&raw_body);
+
+    // Pattern: POST:/transfer-va/create-va:{bodyHash}:{timestamp}
+    let string_to_verify = format!("POST:/transfer-va/create-va:{}:{}", sha_json, timestamp);
+    println!("SNAP Create VA String to Verify: {}", string_to_verify);
+
+    let valid = verify_signature(&string_to_verify, signature, &public_key);
+    let body_json: Value = serde_json::from_slice(&body).unwrap_or(json!({}));
+
+    let response_code = if valid { "2002700" } else { "4012701" };
+    let response_message = if valid { "Success" } else { "Invalid Signature" };
+
+    let response_data = json!({
+        "responseCode": response_code,
+        "responseMessage": response_message
+    });
+
+    // Broadcast
+    let sse_data = json!({
+        "type": "inbound",
+        "headers": headers_map,
+        "body": body_json,
+        "endpoint": "/api/v1.0/transfer-va/create-va",
+        "verificationStatus": if valid { "Valid" } else { "Invalid" },
+        "responseBody": response_data
+    });
+    let _ = state.tx.send(sse_data.to_string());
+
+    if !valid {
+        return HttpResponse::Unauthorized().json(response_data);
+    }
+
+    println!("SNAP Create VA Signature is valid");
     HttpResponse::Ok().json(response_data)
 }
 
@@ -236,6 +322,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::permissive())
             .route("/callback", web::post().to(callback_handler))
             .route("/transfer-va/payment", web::post().to(snap_callback_handler))
+            .route("/api/v1.0/transfer-va/create-va", web::post().to(snap_create_va_handler))
             .route("/log", web::post().to(log_handler))
             .route("/events", web::get().to(sse_client))
             .service(Files::new("/", "./static").index_file("index.html"))

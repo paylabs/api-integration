@@ -134,6 +134,50 @@ def snap_callback():
     print('SNAP Signature is valid')
     return jsonify(resp_data)
 
+@app.route('/api/v1.0/transfer-va/create-va', methods=['POST'])
+def snap_create_va():
+    """Handle SNAP VA creation/inquiry callback."""
+    signature = request.headers.get('X-Signature')
+    timestamp = request.headers.get('X-Timestamp')
+    public_key = os.getenv('PAYLABS_PUBLIC_KEY')
+
+    print(f'Incoming SNAP Create VA Headers: {dict(request.headers)}')
+
+    data_to_sign = request.get_data(as_text=True)
+    sha_json = hashlib.sha256(data_to_sign.encode()).hexdigest().lower()
+
+    # Pattern: POST:/transfer-va/create-va:{bodyHash}:{timestamp}
+    string_to_verify = f'POST:/transfer-va/create-va:{sha_json}:{timestamp}'
+    print(f'SNAP Create VA String to Verify: {string_to_verify}')
+
+    valid = verify_signature(string_to_verify, signature, public_key)
+    body = request.get_json()
+
+    response_code = '2002700' if valid else '4012701'
+    response_message = 'Success' if valid else 'Invalid Signature'
+
+    resp_data = {
+        'responseCode': response_code,
+        'responseMessage': response_message
+    }
+
+    # Broadcast to SSE
+    sse_data = {
+        'type': 'inbound',
+        'headers': dict(request.headers),
+        'body': body,
+        'endpoint': '/api/v1.0/transfer-va/create-va',
+        'verificationStatus': 'Valid' if valid else 'Invalid',
+        'responseBody': resp_data
+    }
+    broadcast(sse_data)
+
+    if not valid:
+        return jsonify(resp_data), 401
+
+    print('SNAP Create VA Signature is valid')
+    return jsonify(resp_data)
+
 @app.route('/log', methods=['POST'])
 def log_route():
     """Receive logs from outbound requests and broadcast via SSE."""

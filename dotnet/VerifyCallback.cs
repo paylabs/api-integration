@@ -109,6 +109,10 @@ public static class VerifyCallback
                 ClientsLock.Release();
             }
 
+            var status = bodyElement.TryGetProperty("status", out var s) ? s.GetString() : "";
+            var requestId = bodyElement.TryGetProperty("requestId", out var r) ? r.GetString() : "";
+            var merchantId = bodyElement.TryGetProperty("merchantId", out var m) ? m.GetString() : "";
+
             var responseData = status != "02" ? 
                 (object)new
                 {
@@ -139,6 +143,66 @@ public static class VerifyCallback
             await BroadcastSse(JsonSerializer.Serialize(finalSseData));
 
             return Results.Ok(responseData);
+        });
+
+        app.MapPost("/api/v1.0/transfer-va/create-va", async (HttpContext context) =>
+        {
+            var signature = context.Request.Headers["X-Signature"].FirstOrDefault() ?? "";
+            var timestamp = context.Request.Headers["X-Timestamp"].FirstOrDefault() ?? "";
+            var publicKey = Environment.GetEnvironmentVariable("PAYLABS_PUBLIC_KEY") ?? "";
+
+            Console.WriteLine("Incoming SNAP Create VA Headers:");
+            var headers = new Dictionary<string, string>();
+            foreach (var header in context.Request.Headers)
+            {
+                Console.WriteLine($"  {header.Key}: {header.Value}");
+                headers[header.Key.ToLower()] = header.Value.ToString();
+            }
+
+            using var reader = new StreamReader(context.Request.Body);
+            var rawBody = await reader.ReadToEndAsync();
+
+            using var sha256 = SHA256.Create();
+            var bodyHash = Convert.ToHexString(sha256.ComputeHash(Encoding.UTF8.GetBytes(rawBody))).ToLower();
+
+            // Pattern: POST:/transfer-va/create-va:{bodyHash}:{timestamp}
+            var stringToVerify = $"POST:/transfer-va/create-va:{bodyHash}:{timestamp}";
+            Console.WriteLine($"SNAP Create VA String to Verify: {stringToVerify}");
+
+            var valid = PaylabsSignature.VerifySignature(stringToVerify, signature, publicKey);
+            var jsonBody = JsonSerializer.Deserialize<object>(rawBody);
+
+            var responseCode = valid ? "2002700" : "4012701";
+            var responseMessage = valid ? "Success" : "Invalid Signature";
+
+            var responseData = new
+            {
+                responseCode,
+                responseMessage
+            };
+
+            // Broadcast
+            var sseData = new
+            {
+                type = "inbound",
+                headers,
+                body = jsonBody,
+                endpoint = "/api/v1.0/transfer-va/create-va",
+                verificationStatus = valid ? "Valid" : "Invalid",
+                responseBody = responseData
+            };
+            
+            await BroadcastSse(JsonSerializer.Serialize(sseData));
+
+            if (!valid)
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(responseData);
+                return;
+            }
+
+            Console.WriteLine("SNAP Create VA Signature is valid");
+            await context.Response.WriteAsJsonAsync(responseData);
         });
 
         app.MapPost("/log", async (HttpContext context) =>

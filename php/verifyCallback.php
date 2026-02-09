@@ -253,6 +253,52 @@ if ($uri === '/transfer-va/payment' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
+// Handle SNAP Create VA Callback
+if ($uri === '/api/v1.0/transfer-va/create-va' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $signature = $_SERVER['HTTP_X_SIGNATURE'] ?? '';
+    $timestamp = $_SERVER['HTTP_X_TIMESTAMP'] ?? '';
+    $publicKey = $_ENV['PAYLABS_PUBLIC_KEY'];
+
+    error_log("Incoming SNAP Create VA Headers:");
+    foreach (getallheaders() as $name => $value) {
+        error_log("  {$name}: {$value}");
+    }
+
+    $rawBody = file_get_contents('php://input');
+    $shaJson = strtolower(hash('sha256', $rawBody));
+
+    $stringToVerify = "POST:/transfer-va/create-va:{$shaJson}:{$timestamp}";
+    error_log("SNAP Create VA String to Verify: {$stringToVerify}");
+
+    $valid = PaylabsSignature::verifySignature($stringToVerify, $signature, $publicKey);
+    $body = json_decode($rawBody, true);
+
+    $responseCode = $valid ? "2002700" : "4012701";
+    $responseMessage = $valid ? "Success" : "Invalid Signature";
+
+    $responseData = [
+        'responseCode' => $responseCode,
+        'responseMessage' => $responseMessage
+    ];
+
+    $sseData = [
+        'type' => 'inbound',
+        'headers' => getallheaders(),
+        'body' => $body,
+        'endpoint' => '/api/v1.0/transfer-va/create-va',
+        'verificationStatus' => $valid ? 'Valid' : 'Invalid',
+        'id' => uniqid('ev_', true),
+        'responseBody' => $responseData
+    ];
+    logEvent($sseData);
+
+    if (!$valid) {
+        http_response_code(401);
+    }
+    echo json_encode($responseData);
+    exit;
+}
+
 // 404 for other routes
 if ($uri !== '/') {
     http_response_code(404);

@@ -380,6 +380,6 @@ func createGeneralTransaction() {
 
 func main() {
     godotenv.Load()
-	// createQRIS()
-    createSnapTransaction()
+	createQRIS()
+    // createSnapTransaction()
 }

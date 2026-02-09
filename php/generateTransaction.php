@@ -92,6 +92,6 @@ function createSnapTransaction()
     PaylabsSignature::createTransactionSnap($endpoint, $body); // externalId auto-handled or pass $requestId if needed
 }
 
-// createQRIS();
+createQRIS();
 // createGeneralTransaction();
-createSnapTransaction();
+// createSnapTransaction();

@@ -223,6 +223,77 @@ public class VerifyCallback {
             return ResponseEntity.internalServerError().body("Internal error");
         }
     }
+    @PostMapping("/api/v1.0/transfer-va/create-va")
+    public ResponseEntity<?> snapCreateVa(
+            HttpServletRequest servletRequest,
+            @RequestHeader(value = "X-Signature", required = false) String signature,
+            @RequestHeader(value = "X-Timestamp", required = false) String timestamp,
+            @RequestBody String rawBody) {
+
+        String publicKey = dotenv.get("PAYLABS_PUBLIC_KEY", "");
+
+        // Log headers
+        System.out.println("Incoming SNAP Create VA Headers:");
+        Map<String, String> headers = new HashMap<>();
+        Enumeration<String> headerNames = servletRequest.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String name = headerNames.nextElement();
+            String value = servletRequest.getHeader(name);
+            System.out.println("  " + name + ": " + value);
+            headers.put(name.toLowerCase(), value);
+        }
+
+        try {
+            // Calculate SHA256 hash
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(rawBody.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            String shaJson = hexString.toString().toLowerCase();
+
+            // Pattern: POST:/transfer-va/create-va:{bodyHash}:{timestamp}
+            String stringToVerify = String.format("POST:/transfer-va/create-va:%s:%s", shaJson, timestamp);
+            System.out.println("SNAP Create VA String to Verify: " + stringToVerify);
+
+            boolean valid = PaylabsSignature.verifySignature(stringToVerify, signature, publicKey);
+
+            // Parse body for broadcasting
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> body = mapper.readValue(rawBody, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+
+            String responseCode = valid ? "2002700" : "4012701";
+            String responseMessage = valid ? "Success" : "Invalid Signature";
+
+            Map<String, String> responseData = new HashMap<>();
+            responseData.put("responseCode", responseCode);
+            responseData.put("responseMessage", responseMessage);
+
+            Map<String, Object> sseData = new HashMap<>();
+            sseData.put("type", "inbound");
+            sseData.put("headers", headers);
+            sseData.put("body", body);
+            sseData.put("endpoint", "/api/v1.0/transfer-va/create-va");
+            sseData.put("verificationStatus", valid ? "Valid" : "Invalid");
+            sseData.put("responseBody", responseData);
+
+            broadcast(sseData);
+
+            if (!valid) {
+                return ResponseEntity.status(401).body(responseData);
+            }
+
+            System.out.println("SNAP Create VA Signature is valid");
+            return ResponseEntity.ok(responseData);
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Internal error");
+        }
+    }
     @PostMapping("/log")
     public ResponseEntity<?> log(@RequestBody Map<String, Object> logData) {
         broadcast(logData);

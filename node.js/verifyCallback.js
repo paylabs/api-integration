@@ -38,7 +38,7 @@ app.get("/", (req, res) => {
 
 // Outbound Logging Endpoint
 app.post("/log", (req, res) => {
-  console.log("Outbound Log received:", req.body.type);
+  console.log("Outbound Log received:", req.body.type || "transaction");
   broadcast({
     type: "outbound",
     ...req.body,
@@ -105,6 +105,54 @@ app.post("/callback", (req, res) => {
     verificationStatus: "Valid",
     responseBody: responseData,
   });
+
+  res.status(200).json(responseData);
+});
+
+app.post("/api/v1.0/transfer-va/create-va", (req, res) => {
+  const signature = req.headers["x-signature"];
+  const timestamp = req.headers["x-timestamp"];
+  const publicKey = process.env.PAYLABS_PUBLIC_KEY;
+
+  console.log("Incoming SNAP Create VA Headers:", req.headers);
+
+  const dataToSign = JSON.stringify(req.body);
+  const shaJson = createHash("sha256")
+    .update(dataToSign)
+    .digest("hex")
+    .toLowerCase();
+
+  const stringToVerify = `POST:/transfer-va/create-va:${shaJson}:${timestamp}`;
+  console.log("SNAP Create VA String to Verify:", stringToVerify);
+
+  const verifier = createVerify("RSA-SHA256");
+  verifier.update(stringToVerify);
+  verifier.end();
+
+  let valid = false;
+  try {
+    valid = verifier.verify(publicKey, signature, "base64");
+  } catch (error) {
+    console.error("Signature verification error:", error);
+  }
+
+  const responseData = {
+    responseCode: valid ? "2002700" : "4012701",
+    responseMessage: valid ? "Success" : "Invalid Signature",
+  };
+
+  broadcast({
+    type: "inbound",
+    headers: req.headers,
+    body: req.body,
+    endpoint: "/api/v1.0/transfer-va/create-va",
+    verificationStatus: valid ? "Valid" : "Invalid",
+    responseBody: responseData,
+  });
+
+  if (!valid) {
+    return res.status(401).json(responseData);
+  }
 
   res.status(200).json(responseData);
 });

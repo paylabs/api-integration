@@ -105,6 +105,7 @@ export async function createTransaction(endpoint, body) {
     console.log("Response:", JSON.stringify(data, null, 2));
 
     await logToLocalServer({
+      type: "outbound",
       method: "POST",
       endpoint,
       requestHeaders: {
@@ -182,6 +183,7 @@ export async function createTransactionSnap(endpoint, body) {
     console.log("Response:", JSON.stringify(data, null, 2));
 
     await logToLocalServer({
+      type: "outbound",
       method: "POST",
       endpoint,
       requestHeaders: headers,

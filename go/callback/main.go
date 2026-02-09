@@ -287,6 +287,86 @@ func snapCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func snapCreateVaHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	signature := r.Header.Get("X-Signature")
+	timestamp := r.Header.Get("X-Timestamp")
+	publicKey := os.Getenv("PAYLABS_PUBLIC_KEY")
+
+	log.Println("Incoming SNAP Create VA Headers:")
+	headers := make(map[string]interface{})
+	for name, values := range r.Header {
+		for _, value := range values {
+			log.Printf("  %s: %s\n", name, value)
+			headers[strings.ToLower(name)] = value
+		}
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read body", http.StatusBadRequest)
+		return
+	}
+
+	var body map[string]interface{}
+	json.Unmarshal(bodyBytes, &body)
+
+	dataToSign := string(bodyBytes)
+	hash := sha256.Sum256([]byte(dataToSign))
+	shaJson := strings.ToLower(hex.EncodeToString(hash[:]))
+
+	stringToVerify := fmt.Sprintf("POST:/transfer-va/create-va:%s:%s", shaJson, timestamp)
+	log.Println("SNAP Create VA String to Verify:", stringToVerify)
+
+	valid := verifySignature(stringToVerify, signature, publicKey)
+
+	responseCode := "2002700"
+	responseMessage := "Success"
+	if !valid {
+		responseCode = "4012701"
+		responseMessage = "Invalid Signature"
+	}
+
+	responseData := map[string]interface{}{
+		"responseCode":    responseCode,
+		"responseMessage": responseMessage,
+	}
+
+	// Broadcast to SSE clients
+	sseData := map[string]interface{}{
+		"type":               "inbound",
+		"headers":            headers,
+		"body":               body,
+		"endpoint":           "/api/v1.0/transfer-va/create-va",
+		"verificationStatus": "Invalid",
+		"responseBody":       responseData,
+	}
+	if valid {
+		sseData["verificationStatus"] = "Valid"
+	}
+
+	sseJson, _ := json.Marshal(sseData)
+	clientsMu.Lock()
+	for clientChan := range clients {
+		clientChan <- string(sseJson)
+	}
+	clientsMu.Unlock()
+
+	if !valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(responseData)
+		return
+	}
+
+	log.Println("SNAP Create VA Signature is valid")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
 func logHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -320,6 +400,7 @@ func main() {
 	http.HandleFunc("/log", logHandler)
 	http.HandleFunc("/callback", callbackHandler)
 	http.HandleFunc("/transfer-va/payment", snapCallbackHandler)
+	http.HandleFunc("/api/v1.0/transfer-va/create-va", snapCreateVaHandler)
 
 	log.Printf("Callback server listening on port %s\n", port)
 	log.Printf("Open http://localhost:%s to visualize callbacks\n", port)
