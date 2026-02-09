@@ -113,7 +113,23 @@ function connect() {
 
   eventSource.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    data.timestamp = new Date().toLocaleTimeString();
+
+    // Duplicate detection using data.id
+    if (data.id && dataStore.some((item) => item.id === data.id)) {
+      if (data.responseBody) {
+        const index = dataStore.findIndex((item) => item.id === data.id);
+        if (index !== -1) {
+          dataStore[index] = { ...dataStore[index], ...data };
+          saveToStorage();
+          updateCard(dataStore[index]);
+        }
+      }
+      return;
+    }
+
+    if (!data.timestamp) {
+      data.timestamp = new Date().toLocaleTimeString();
+    }
     dataStore.unshift(data);
     saveToStorage();
     addDataItem(data, true);
@@ -121,8 +137,8 @@ function connect() {
 
   eventSource.onerror = () => {
     statusBadge.className =
-      "fixed bottom-4 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg bg-red-500 text-white";
-    statusBadge.textContent = "Disconnected";
+      "fixed bottom-4 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400/50";
+    statusBadge.textContent = "Syncing...";
     eventSource.close();
     setTimeout(connect, 3000);
   };
@@ -135,13 +151,15 @@ function renderAllItems() {
   listInbound.innerHTML = "";
   listOutbound.innerHTML = "";
 
-  dataStore.forEach((data, index) => {
-    addDataItem(data, false, dataStore.length - index);
-  });
+  dataStore
+    .slice()
+    .reverse()
+    .forEach((data) => {
+      addDataItem(data, false);
+    });
 }
 
-function addDataItem(data, prepend = true, forceId = null) {
-  const id = forceId || ++itemCount;
+function addDataItem(data, prepend = true) {
   const timestamp = data.timestamp || new Date().toLocaleTimeString();
   const isOutbound = data.type === "outbound";
   const typeLabel = isOutbound ? "OUT" : "IN";
@@ -159,11 +177,7 @@ function addDataItem(data, prepend = true, forceId = null) {
     statusBadgeHtml = `<span class="px-1.5 py-0.5 rounded text-xs font-medium ${statusColor}">${data.verificationStatus}</span>`;
   }
 
-  const createCard = () => {
-    const card = document.createElement("div");
-    card.className =
-      "bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-indigo-900/10 border border-transparent dark:border-slate-700 fade-in overflow-hidden";
-    card.innerHTML = `
+  const cardHtml = `
       <div class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
         <div class="flex items-center gap-2" style="width: 40%;">
           <svg class="chevron w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -175,28 +189,33 @@ function addDataItem(data, prepend = true, forceId = null) {
           <span class="text-xs text-gray-400 dark:text-slate-500 font-medium">${timestamp}</span>
         </div>
       </div>
-      <div class="p-4 flex flex-col gap-4 hidden border-t border-gray-50 dark:border-slate-700/50">
+      <div class="details-panel p-4 flex flex-col gap-4 hidden border-t border-gray-50 dark:border-slate-700/50">
         ${isOutbound ? renderOutbound(data) : renderInbound(data)}
       </div>
-    `;
+  `;
+
+  const createCard = () => {
+    const card = document.createElement("div");
+    card.setAttribute("data-id", data.id);
+    card.className =
+      "bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-indigo-900/10 border border-transparent dark:border-slate-700 fade-in overflow-hidden mb-4";
+    card.innerHTML = cardHtml;
     return card;
   };
 
-  const removeEmpty = (listEl, type) => {
+  const removeEmpty = (listEl) => {
     const placeholder = listEl.querySelector(".empty-state");
-    if (placeholder) {
-      placeholder.remove();
-    }
+    if (placeholder) placeholder.remove();
   };
 
   if (prepend) {
-    removeEmpty(listAll, "all");
+    removeEmpty(listAll);
     listAll.prepend(createCard());
     if (isOutbound) {
-      removeEmpty(listOutbound, "outbound");
+      removeEmpty(listOutbound);
       listOutbound.prepend(createCard());
     } else {
-      removeEmpty(listInbound, "inbound");
+      removeEmpty(listInbound);
       listInbound.prepend(createCard());
     }
   } else {
@@ -207,6 +226,19 @@ function addDataItem(data, prepend = true, forceId = null) {
       listInbound.appendChild(createCard());
     }
   }
+}
+
+function updateCard(data) {
+  const cards = document.querySelectorAll(`[data-id="${data.id}"]`);
+  cards.forEach((card) => {
+    const isOutbound = data.type === "outbound";
+    const detailsPanel = card.querySelector(".details-panel");
+    if (detailsPanel) {
+      detailsPanel.innerHTML = isOutbound
+        ? renderOutbound(data)
+        : renderInbound(data);
+    }
+  });
 }
 
 function renderInbound(data) {

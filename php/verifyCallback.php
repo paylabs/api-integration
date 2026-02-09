@@ -79,14 +79,24 @@ if ($uri === '/js/client.js') {
     exit;
 }
 
-// Polling Endpoint
+// One-shot SSE Endpoint
 if ($uri === '/events') {
-    header('Content-Type: application/json');
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('Connection: keep-alive');
+
     if (file_exists($callbackFile)) {
-        echo file_get_contents($callbackFile);
-    } else {
-        echo json_encode([]);
+        $content = file_get_contents($callbackFile);
+        $history = json_decode($content, true);
+        if (is_array($history)) {
+            // Send history in reverse (oldest first) so client appends correctly
+            foreach (array_reverse($history) as $data) {
+                echo "data: " . json_encode($data) . "\n\n";
+            }
+        }
     }
+    // End the connection immediately after history delivery to avoid blocking
+    // the single-threaded PHP built-in server.
     exit;
 }
 
