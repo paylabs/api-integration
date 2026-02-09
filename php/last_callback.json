@@ -1,0 +1,638 @@
+[
+    {
+        "type": "inbound",
+        "headers": {
+            "Host": "ungirlishly-unmoralistic-antony.ngrok-free.dev",
+            "User-Agent": "Apache-HttpClient\/4.5.14 (Java\/1.8.0_402)",
+            "Content-Length": "720",
+            "Accept-Encoding": "gzip,deflate",
+            "Content-Type": "application\/json; charset=UTF-8",
+            "X-Forwarded-For": "149.129.213.40",
+            "X-Forwarded-Host": "ungirlishly-unmoralistic-antony.ngrok-free.dev",
+            "X-Forwarded-Proto": "https",
+            "X-Partner-Id": "010552",
+            "X-Signature": "JCrahbagj2\/8jSmaLkRTbCeMybGhR9AaW+apvyvH3ZCx6mmUHn4cWmNEv+9TWmoZKuo2EUGY2jqIlE9UgfmQY4DEn0BUmNTHMBj3nTPz1rtDHLrIWiXq4s7Nv9qEyvCYy5HdAEs8TzE+dXzzh4HjpgBf1u1jvPa1e4hhOGeETYNbD8+bJxH3mZUfaARdaY3nZSPNRkJxYS37cvi8NqFoGAfFgT6NJ\/ws6wETZXYWNNHJXHfqclAfVONZonLYH2\/WPCBCQSohg5O+VLp6gCgTZorMLk3Jdm2W7yXZCISmsbNNcXGwIq72F21hDeh88dAbNcFLP6+VIRl2ExnVKE32VQ==",
+            "X-Timestamp": "2026-02-09T17:33:47+07:00"
+        },
+        "body": {
+            "partnerServiceId": "010552",
+            "customerNo": "00000000000000000000",
+            "virtualAccountNo": "8567019524601595",
+            "virtualAccountName": "SUCCESS John - shoes**",
+            "virtualAccountPhone": "+6281234567890",
+            "trxId": "PYL20260209173336484402",
+            "paymentRequestId": "2026020955200000131",
+            "channelCode": 401,
+            "paidAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "totalAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "trxDateTime": "2026-02-09T17:33:46+07:00",
+            "referenceNo": "2026020955200000131",
+            "billDetails": [
+                {
+                    "billCode": "1",
+                    "billName": "Produk John",
+                    "billAmount": {
+                        "value": "10000.00",
+                        "currency": "IDR"
+                    }
+                }
+            ],
+            "additionalInfo": {
+                "paymentType": "MuamalatVA",
+                "transFeeRate": "0.000000",
+                "vatFee": "0",
+                "totalTransFee": "2000.00",
+                "transFeeAmount": "2000.00",
+                "payer": ""
+            }
+        },
+        "endpoint": "\/transfer-va\/payment",
+        "verificationStatus": "Valid",
+        "id": "ev_6989b80b437d39.69911841",
+        "timestamp": "10:33:47",
+        "responseBody": {
+            "responseCode": "2002500",
+            "responseMessage": "Success",
+            "virtualAccountData": {
+                "virtualAccountNo": "8567019524601595",
+                "paymentRequestId": "2026020955200000131",
+                "partnerServiceId": "010552",
+                "virtualAccountPhone": "+6281234567890",
+                "virtualAccountName": "SUCCESS John - shoes**",
+                "trxId": "PYL20260209173336484402",
+                "billDetails": [
+                    {
+                        "billCode": "1",
+                        "billName": "Produk John",
+                        "billAmount": {
+                            "value": "10000.00",
+                            "currency": "IDR"
+                        }
+                    }
+                ],
+                "totalAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "customerNo": "00000000000000000000",
+                "paidAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "referenceNo": "2026020955200000131",
+                "trxDateTime": "2026-02-09T17:33:46+07:00",
+                "paymentFlagStatus": "00"
+            }
+        }
+    },
+    {
+        "type": "outbound",
+        "endpoint": "\/api\/v1.0\/transfer-va\/create-va",
+        "requestHeaders": [
+            "Content-Type: application\/json;charset=utf-8",
+            "X-PARTNER-ID: 010552",
+            "X-TIMESTAMP: 2026-02-09T17:33:36+07:00",
+            "X-SIGNATURE: DANaE6pqZJsAaW+OTtPh4ytRxPdqofOkijo0482rdMzPA093l\/XfjSvLY6ZuqV5Gk0STBpdJm7VlU0As74qfWaP4QMbcOWJa\/i\/B9ru1QWLoIx6ce22vXl5YllYCAmgMCoLL0kIs5UtSNdUzevJ1S9eQeaJaYEThNW4Lu+6H6IZKEW3I9MtJOPZMXcBf56v7eIWY3yuodzCbI55iYC0f+Vy0MRSk0\/XfQbb4yqNxxReCo++fDj90Gw3IT\/q9ndnDRm+rBl+nSp2GQ5hA\/L3F1sn+jHpdhSUYKW1TIkYfYNKuOEOYFtXFNCD\/UnLmbWXWW7PwUVinmcf2AW2rLHZD8w==",
+            "X-EXTERNAL-ID: 20260209173336694064",
+            "X-IP-ADDRESS: 103.255.243.34"
+        ],
+        "requestBody": {
+            "partnerServiceId": "00010552",
+            "customerNo": "00000000000000000000",
+            "virtualAccountNo": "000105796289500005539",
+            "virtualAccountName": "SUCCESS John - shoes**",
+            "virtualAccountPhone": "+6281234567890",
+            "trxId": "PYL20260209173336484402",
+            "totalAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "billDetails": [
+                {
+                    "billCode": "1",
+                    "billName": "Produk John",
+                    "billAmount": {
+                        "value": "10000.00",
+                        "currency": "IDR"
+                    }
+                }
+            ],
+            "expiredDate": "2026-12-25T15:52:34+07:00",
+            "virtualAccountTrxType": "1",
+            "additionalInfo": {
+                "paymentType": "MuamalatVA"
+            }
+        },
+        "responseBody": {
+            "responseCode": "2002700",
+            "responseMessage": "Successful",
+            "virtualAccountData": {
+                "partnerServiceId": "00010552",
+                "customerNo": "00000000000000000000",
+                "virtualAccountNo": "8567019524601595",
+                "virtualAccountName": "SUCCESS John - shoes**",
+                "virtualAccountPhone": "+6281234567890",
+                "trxId": "PYL20260209173336484402",
+                "totalAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "virtualAccountTrxType": "C",
+                "expiredDate": "2026-12-25T15:52:34+07:00",
+                "additionalInfo": {
+                    "paymentType": "MuamalatVA"
+                }
+            }
+        },
+        "id": "ev_6989b800c1bfa6.80769518",
+        "timestamp": "10:33:36"
+    },
+    {
+        "type": "inbound",
+        "headers": {
+            "Host": "ungirlishly-unmoralistic-antony.ngrok-free.dev",
+            "User-Agent": "Apache-HttpClient\/4.5.14 (Java\/1.8.0_402)",
+            "Content-Length": "720",
+            "Accept-Encoding": "gzip,deflate",
+            "Content-Type": "application\/json; charset=UTF-8",
+            "X-Forwarded-For": "149.129.213.40",
+            "X-Forwarded-Host": "ungirlishly-unmoralistic-antony.ngrok-free.dev",
+            "X-Forwarded-Proto": "https",
+            "X-Partner-Id": "010552",
+            "X-Signature": "I7Y+Bs1qV\/mI2CvOi9F7SCUiZereOTUml5Cu32bhJSRAadfKp3M8tyeuqkRE2RZeLtONFkAkn60+4NRTkgZgRr2L5DmwLOIsdYWnSPK0DxD0v3fWdwVlujsH4R905zd43gWISF3ztVUjvxRGppuSjIIo7J2Vv3uNaBqUSmPiBEm5XV8zRor3wCgUCXKehRCNwMdog0h+gtNhk+UISz2Wl8Fv611wquSLxz6+95usqPL01HqFyCQHvdm9RJwWtBqhfje4x4OSus74s1uaRoyB3tbWQUxsqA70efiymJYfrlUmaFoqNXGcE8C5b9KYx3vdLmVwPHSJSuLC7G7xfVmVgA==",
+            "X-Timestamp": "2026-02-09T17:33:17+07:00"
+        },
+        "body": {
+            "partnerServiceId": "010552",
+            "customerNo": "00000000000000000000",
+            "virtualAccountNo": "8567019662682776",
+            "virtualAccountName": "SUCCESS John - shoes**",
+            "virtualAccountPhone": "+6281234567890",
+            "trxId": "PYL20260209173307314547",
+            "paymentRequestId": "2026020955200000130",
+            "channelCode": 401,
+            "paidAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "totalAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "trxDateTime": "2026-02-09T17:33:15+07:00",
+            "referenceNo": "2026020955200000130",
+            "billDetails": [
+                {
+                    "billCode": "1",
+                    "billName": "Produk John",
+                    "billAmount": {
+                        "value": "10000.00",
+                        "currency": "IDR"
+                    }
+                }
+            ],
+            "additionalInfo": {
+                "paymentType": "MuamalatVA",
+                "transFeeRate": "0.000000",
+                "vatFee": "0",
+                "totalTransFee": "2000.00",
+                "transFeeAmount": "2000.00",
+                "payer": ""
+            }
+        },
+        "endpoint": "\/transfer-va\/payment",
+        "verificationStatus": "Valid",
+        "id": "ev_6989b7ed448766.32204345",
+        "timestamp": "10:33:17",
+        "responseBody": {
+            "responseCode": "2002500",
+            "responseMessage": "Success",
+            "virtualAccountData": {
+                "virtualAccountNo": "8567019662682776",
+                "paymentRequestId": "2026020955200000130",
+                "partnerServiceId": "010552",
+                "virtualAccountPhone": "+6281234567890",
+                "virtualAccountName": "SUCCESS John - shoes**",
+                "trxId": "PYL20260209173307314547",
+                "billDetails": [
+                    {
+                        "billCode": "1",
+                        "billName": "Produk John",
+                        "billAmount": {
+                            "value": "10000.00",
+                            "currency": "IDR"
+                        }
+                    }
+                ],
+                "totalAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "customerNo": "00000000000000000000",
+                "paidAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "referenceNo": "2026020955200000130",
+                "trxDateTime": "2026-02-09T17:33:15+07:00",
+                "paymentFlagStatus": "00"
+            }
+        }
+    },
+    {
+        "type": "outbound",
+        "endpoint": "\/api\/v1.0\/transfer-va\/create-va",
+        "requestHeaders": [
+            "Content-Type: application\/json;charset=utf-8",
+            "X-PARTNER-ID: 010552",
+            "X-TIMESTAMP: 2026-02-09T17:33:07+07:00",
+            "X-SIGNATURE: MagEhU0xIAx1E41wBUFxls6B5jcTtqMfERm2JVQREtG3kc7wNaM5kuyDIho0inAtyvQGza7Au4KdnPq8o7Qk4+1KB8ZCwTNcBNim2mapDJbNEgdYSLFUhk9vxlR0hUoFnClOSZHOFrxFVK0op\/lKayKkcdWoDO7me2eQ2YpUrE2yRwy9tZJOJn4VlmqF7i3cMMxEvvnGPsooFIAvN8zsIb\/jtbYDkaMJCmaSkvorwLfF2n\/iCZkr2JH4hNnoo4rzRCsUSCGEY7SecCIrCRv9wpFPlDi3Hs2NVxmuryiOU34WvSKMeuI3+ze5QGeoNYMeI67+iQ2jMHlzid0mxsXiVQ==",
+            "X-EXTERNAL-ID: 20260209173307661754",
+            "X-IP-ADDRESS: 103.255.243.34"
+        ],
+        "requestBody": {
+            "partnerServiceId": "00010552",
+            "customerNo": "00000000000000000000",
+            "virtualAccountNo": "000105796289500005539",
+            "virtualAccountName": "SUCCESS John - shoes**",
+            "virtualAccountPhone": "+6281234567890",
+            "trxId": "PYL20260209173307314547",
+            "totalAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "billDetails": [
+                {
+                    "billCode": "1",
+                    "billName": "Produk John",
+                    "billAmount": {
+                        "value": "10000.00",
+                        "currency": "IDR"
+                    }
+                }
+            ],
+            "expiredDate": "2026-12-25T15:52:34+07:00",
+            "virtualAccountTrxType": "1",
+            "additionalInfo": {
+                "paymentType": "MuamalatVA"
+            }
+        },
+        "responseBody": {
+            "responseCode": "2002700",
+            "responseMessage": "Successful",
+            "virtualAccountData": {
+                "partnerServiceId": "00010552",
+                "customerNo": "00000000000000000000",
+                "virtualAccountNo": "8567019662682776",
+                "virtualAccountName": "SUCCESS John - shoes**",
+                "virtualAccountPhone": "+6281234567890",
+                "trxId": "PYL20260209173307314547",
+                "totalAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "virtualAccountTrxType": "C",
+                "expiredDate": "2026-12-25T15:52:34+07:00",
+                "additionalInfo": {
+                    "paymentType": "MuamalatVA"
+                }
+            }
+        },
+        "id": "ev_6989b7e3cfd822.23600924",
+        "timestamp": "10:33:07"
+    },
+    {
+        "type": "inbound",
+        "headers": {
+            "Host": "ungirlishly-unmoralistic-antony.ngrok-free.dev",
+            "User-Agent": "Apache-HttpClient\/4.5.14 (Java\/1.8.0_402)",
+            "Content-Length": "720",
+            "Accept-Encoding": "gzip,deflate",
+            "Content-Type": "application\/json; charset=UTF-8",
+            "X-Forwarded-For": "149.129.213.40",
+            "X-Forwarded-Host": "ungirlishly-unmoralistic-antony.ngrok-free.dev",
+            "X-Forwarded-Proto": "https",
+            "X-Partner-Id": "010552",
+            "X-Signature": "crePzIms4tGePuk8TVSUtH4b8c+b7I8xfv5NIhY8s6JGfVVU2pYRejkNjehBXBztVcF2q5LebfkNJWSI+f8weYh8sP+rnE0pRG1sJOHs+mGpGIbeFZuIcjPGqtJn7V4iU2AmnjbUyhJaRPmfiZJYtSzD+Z4\/g85RFOZJg4nIQX6+wyJOeU2HRZcKgO+MZYsyKQl7FwQfSXvdTc5+r0GulU7V+xgLWvwyQkTYVWTT27TR2bLdRVy9bG1cJIT5\/ZmaUhKOxEtsd0yOcf6i1lnmfHdrI1Jzf+hxC1L6v807G1mIxAf\/z1cFv8FxbPTB+LFp\/Q+1UrQCmo8QKF11h6t1Dw==",
+            "X-Timestamp": "2026-02-09T17:30:28+07:00"
+        },
+        "body": {
+            "partnerServiceId": "010552",
+            "customerNo": "00000000000000000000",
+            "virtualAccountNo": "8567019692516639",
+            "virtualAccountName": "SUCCESS John - shoes**",
+            "virtualAccountPhone": "+6281234567890",
+            "trxId": "PYL20260209173017794302",
+            "paymentRequestId": "2026020955200000128",
+            "channelCode": 401,
+            "paidAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "totalAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "trxDateTime": "2026-02-09T17:30:26+07:00",
+            "referenceNo": "2026020955200000128",
+            "billDetails": [
+                {
+                    "billCode": "1",
+                    "billName": "Produk John",
+                    "billAmount": {
+                        "value": "10000.00",
+                        "currency": "IDR"
+                    }
+                }
+            ],
+            "additionalInfo": {
+                "paymentType": "MuamalatVA",
+                "transFeeRate": "0.000000",
+                "vatFee": "0",
+                "totalTransFee": "2000.00",
+                "transFeeAmount": "2000.00",
+                "payer": ""
+            }
+        },
+        "endpoint": "\/transfer-va\/payment",
+        "verificationStatus": "Valid",
+        "id": "ev_6989b7442f8db5.46243602",
+        "timestamp": "10:30:28",
+        "responseBody": {
+            "responseCode": "2002500",
+            "responseMessage": "Success",
+            "virtualAccountData": {
+                "virtualAccountNo": "8567019692516639",
+                "paymentRequestId": "2026020955200000128",
+                "partnerServiceId": "010552",
+                "virtualAccountPhone": "+6281234567890",
+                "virtualAccountName": "SUCCESS John - shoes**",
+                "trxId": "PYL20260209173017794302",
+                "billDetails": [
+                    {
+                        "billCode": "1",
+                        "billName": "Produk John",
+                        "billAmount": {
+                            "value": "10000.00",
+                            "currency": "IDR"
+                        }
+                    }
+                ],
+                "totalAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "customerNo": "00000000000000000000",
+                "paidAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "referenceNo": "2026020955200000128",
+                "trxDateTime": "2026-02-09T17:30:26+07:00",
+                "paymentFlagStatus": "00"
+            }
+        }
+    },
+    {
+        "type": "outbound",
+        "endpoint": "\/api\/v1.0\/transfer-va\/create-va",
+        "requestHeaders": [
+            "Content-Type: application\/json;charset=utf-8",
+            "X-PARTNER-ID: 010552",
+            "X-TIMESTAMP: 2026-02-09T17:30:17+07:00",
+            "X-SIGNATURE: IlmQ282Cp+FudL6DHgu1celyIvK\/XelkTXGJyuUhzsx4kw8zqkOKldOxRb5rvfm1qXrhnqOXCe5Iz8dQGr+pjzbEj6Q\/O4bK3wxr0cOa9ZX4NjuNSfyN+yywg\/yAYNAdTsAYffNf1o71n67cYoXTKBT\/y\/lk6zdxCeQetbV5V9CwTKklC7XK6AaaDuu609gf4Dg69u5+pufg3Hzs2hSWFZwsiZe4HHGQW1VBKix1mJrGbjuwULG2fQM+2EdGeT\/xAXTsWym98xgwXSDMqUnw0F1jJMJ0kzswDIsdRdXWvdEaWyDh8zxHcEiKpBIIbzuiAo85zh3R41ekQoBtShg2CA==",
+            "X-EXTERNAL-ID: 20260209173017496571",
+            "X-IP-ADDRESS: 103.255.243.34"
+        ],
+        "requestBody": {
+            "partnerServiceId": "00010552",
+            "customerNo": "00000000000000000000",
+            "virtualAccountNo": "000105796289500005539",
+            "virtualAccountName": "SUCCESS John - shoes**",
+            "virtualAccountPhone": "+6281234567890",
+            "trxId": "PYL20260209173017794302",
+            "totalAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "billDetails": [
+                {
+                    "billCode": "1",
+                    "billName": "Produk John",
+                    "billAmount": {
+                        "value": "10000.00",
+                        "currency": "IDR"
+                    }
+                }
+            ],
+            "expiredDate": "2026-12-25T15:52:34+07:00",
+            "virtualAccountTrxType": "1",
+            "additionalInfo": {
+                "paymentType": "MuamalatVA"
+            }
+        },
+        "responseBody": {
+            "responseCode": "2002700",
+            "responseMessage": "Successful",
+            "virtualAccountData": {
+                "partnerServiceId": "00010552",
+                "customerNo": "00000000000000000000",
+                "virtualAccountNo": "8567019692516639",
+                "virtualAccountName": "SUCCESS John - shoes**",
+                "virtualAccountPhone": "+6281234567890",
+                "trxId": "PYL20260209173017794302",
+                "totalAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "virtualAccountTrxType": "C",
+                "expiredDate": "2026-12-25T15:52:34+07:00",
+                "additionalInfo": {
+                    "paymentType": "MuamalatVA"
+                }
+            }
+        },
+        "id": "ev_6989b739bbefc6.61564973",
+        "timestamp": "10:30:17"
+    },
+    {
+        "type": "inbound",
+        "headers": {
+            "Host": "ungirlishly-unmoralistic-antony.ngrok-free.dev",
+            "User-Agent": "Apache-HttpClient\/4.5.14 (Java\/1.8.0_402)",
+            "Content-Length": "720",
+            "Accept-Encoding": "gzip,deflate",
+            "Content-Type": "application\/json; charset=UTF-8",
+            "X-Forwarded-For": "149.129.213.40",
+            "X-Forwarded-Host": "ungirlishly-unmoralistic-antony.ngrok-free.dev",
+            "X-Forwarded-Proto": "https",
+            "X-Partner-Id": "010552",
+            "X-Signature": "Q5S6v5XBXGZkOCRDv+Y8ktpOb6vTpTIAn7njgRm9yQD06IFTPQLd3\/HS1K9qdC9\/l7\/erbmtPfFl\/rB2rR7BwSjUApfpiqVvf8zltikFweReKIhRzoPMUpkY2nX65XZfc7I2L4hA6X7ozngd1heRbLFypfY6WF4bnA\/gfqgN4Uh3NVOE7xubqi7WNSyB\/6TX\/DHqJlsfc1uJRZ9MCt1qEzvqLi8txkMhnueV2zZybKC4sQWmqkY6pWFdgZbjZxbNmQ2TYCTBANDtdKGehEozldYIsgRHJl1YPse3W5pWjro7OLiuaqJ96SJCQBRj9VKRi04ggo3vQQzPHq7HeoUg8A==",
+            "X-Timestamp": "2026-02-09T17:28:31+07:00"
+        },
+        "body": {
+            "partnerServiceId": "010552",
+            "customerNo": "00000000000000000000",
+            "virtualAccountNo": "8567019563478563",
+            "virtualAccountName": "SUCCESS John - shoes**",
+            "virtualAccountPhone": "+6281234567890",
+            "trxId": "PYL20260209172819227928",
+            "paymentRequestId": "2026020955200000127",
+            "channelCode": 401,
+            "paidAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "totalAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "trxDateTime": "2026-02-09T17:28:28+07:00",
+            "referenceNo": "2026020955200000127",
+            "billDetails": [
+                {
+                    "billCode": "1",
+                    "billName": "Produk John",
+                    "billAmount": {
+                        "value": "10000.00",
+                        "currency": "IDR"
+                    }
+                }
+            ],
+            "additionalInfo": {
+                "paymentType": "MuamalatVA",
+                "transFeeRate": "0.000000",
+                "vatFee": "0",
+                "totalTransFee": "2000.00",
+                "transFeeAmount": "2000.00",
+                "payer": ""
+            }
+        },
+        "endpoint": "\/transfer-va\/payment",
+        "verificationStatus": "Valid",
+        "id": "ev_6989b6cf1e0958.09522565",
+        "timestamp": "10:28:31",
+        "responseBody": {
+            "responseCode": "2002500",
+            "responseMessage": "Success",
+            "virtualAccountData": {
+                "virtualAccountNo": "8567019563478563",
+                "paymentRequestId": "2026020955200000127",
+                "partnerServiceId": "010552",
+                "virtualAccountPhone": "+6281234567890",
+                "virtualAccountName": "SUCCESS John - shoes**",
+                "trxId": "PYL20260209172819227928",
+                "billDetails": [
+                    {
+                        "billCode": "1",
+                        "billName": "Produk John",
+                        "billAmount": {
+                            "value": "10000.00",
+                            "currency": "IDR"
+                        }
+                    }
+                ],
+                "totalAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "customerNo": "00000000000000000000",
+                "paidAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "referenceNo": "2026020955200000127",
+                "trxDateTime": "2026-02-09T17:28:28+07:00",
+                "paymentFlagStatus": "00"
+            }
+        }
+    },
+    {
+        "type": "outbound",
+        "endpoint": "\/api\/v1.0\/transfer-va\/create-va",
+        "requestHeaders": [
+            "Content-Type: application\/json;charset=utf-8",
+            "X-PARTNER-ID: 010552",
+            "X-TIMESTAMP: 2026-02-09T17:28:23+07:00",
+            "X-SIGNATURE: hQO14onwGE79QrQ76smfNzLp6JVOTzgcqqMj9i4l\/gkZyJ9+ImS+SkAcZSuR9G+Um2IFmUswQ1IbEz20KdxOEFL9BQ35msTxPY9dL6Gv4WPlBkyiwb02BxHdDlf7iU1brmqiyqGC6PaRJHwTDHBo5MAm9ab5a6D3EI\/5VL9BCZ54xirIjJHxXgkCj\/KFURwhMw6gaL2wwJ6zts7SfxoeLtz+r9K6U0bNH0+jfT5c+UbPB9bWmSfNGmu9H6LkvKWTn24Gh+NUvKIsykT+2MB0axeL449MqfmmMNt\/Nr86EOg2zlXFd7E7xj6xYFnudoTorr0pZSlLseGFGLUOOfIqUw==",
+            "X-EXTERNAL-ID: 20260209172819198693",
+            "X-IP-ADDRESS: 127.0.0.1"
+        ],
+        "requestBody": {
+            "partnerServiceId": "00010552",
+            "customerNo": "00000000000000000000",
+            "virtualAccountNo": "000105796289500005539",
+            "virtualAccountName": "SUCCESS John - shoes**",
+            "virtualAccountPhone": "+6281234567890",
+            "trxId": "PYL20260209172819227928",
+            "totalAmount": {
+                "value": "10000.00",
+                "currency": "IDR"
+            },
+            "billDetails": [
+                {
+                    "billCode": "1",
+                    "billName": "Produk John",
+                    "billAmount": {
+                        "value": "10000.00",
+                        "currency": "IDR"
+                    }
+                }
+            ],
+            "expiredDate": "2026-12-25T15:52:34+07:00",
+            "virtualAccountTrxType": "1",
+            "additionalInfo": {
+                "paymentType": "MuamalatVA"
+            }
+        },
+        "responseBody": {
+            "responseCode": "2002700",
+            "responseMessage": "Successful",
+            "virtualAccountData": {
+                "partnerServiceId": "00010552",
+                "customerNo": "00000000000000000000",
+                "virtualAccountNo": "8567019563478563",
+                "virtualAccountName": "SUCCESS John - shoes**",
+                "virtualAccountPhone": "+6281234567890",
+                "trxId": "PYL20260209172819227928",
+                "totalAmount": {
+                    "value": "10000.00",
+                    "currency": "IDR"
+                },
+                "virtualAccountTrxType": "C",
+                "expiredDate": "2026-12-25T15:52:34+07:00",
+                "additionalInfo": {
+                    "paymentType": "MuamalatVA"
+                }
+            }
+        },
+        "id": "ev_6989b6c73b1a94.60888381",
+        "timestamp": "10:28:23"
+    },
+    {
+        "type": "inbound",
+        "headers": {
+            "Host": "localhost:8090",
+            "Accept": "*\/*",
+            "Content-Type": "application\/json",
+            "X-SIGNATURE": "dummy",
+            "X-TIMESTAMP": "2026-02-09T10:27:36+00:00",
+            "X-PARTNER-ID": "test",
+            "X-EXTERNAL-ID": "test",
+            "Content-Length": "31"
+        },
+        "body": {
+            "requestId": "test-update-123"
+        },
+        "endpoint": "\/transfer-va\/payment",
+        "verificationStatus": "Invalid",
+        "id": "ev_6989b6986cafa2.51589022",
+        "timestamp": "10:27:36"
+    }
+]

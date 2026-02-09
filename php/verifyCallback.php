@@ -8,10 +8,55 @@ use Dotenv\Dotenv;
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+// Performance & SSE Optimization
+set_time_limit(0);
+ini_set('output_buffering', 'off');
+ini_set('zlib.output_compression', false);
+while (ob_get_level()) ob_end_flush();
+ob_implicit_flush(true);
+
 header('Content-Type: application/json');
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $callbackFile = __DIR__ . '/last_callback.json';
+
+function logEvent($data) {
+    global $callbackFile;
+    $history = [];
+    if (file_exists($callbackFile)) {
+        $content = file_get_contents($callbackFile);
+        $history = json_decode($content, true);
+        if (!is_array($history)) $history = [];
+    }
+    
+    // Add unique ID and timestamp if not present
+    if (!isset($data['id'])) {
+        $data['id'] = uniqid('ev_', true);
+    }
+    if (!isset($data['timestamp'])) {
+        $data['timestamp'] = date('H:i:s');
+    }
+
+    // Check if event already exists for update
+    $foundIndex = -1;
+    foreach ($history as $index => $item) {
+        if ($item['id'] === $data['id']) {
+            $foundIndex = $index;
+            break;
+        }
+    }
+
+    if ($foundIndex !== -1) {
+        $history[$foundIndex] = array_merge($history[$foundIndex], $data);
+    } else {
+        // Prepend new event
+        array_unshift($history, $data);
+        // Limit to 50 items
+        $history = array_slice($history, 0, 50);
+    }
+    
+    file_put_contents($callbackFile, json_encode($history, JSON_PRETTY_PRINT));
+}
 
 // Serve Frontend
 if ($uri === '/' || $uri === '/index.html') {
@@ -34,36 +79,13 @@ if ($uri === '/js/client.js') {
     exit;
 }
 
-// SSE Endpoint
+// Polling Endpoint
 if ($uri === '/events') {
-    header('Content-Type: text/event-stream');
-    header('Cache-Control: no-cache');
-    header('Connection: keep-alive');
-
-    $lastModified = 0;
-    
-    // Initial check
+    header('Content-Type: application/json');
     if (file_exists($callbackFile)) {
-        $lastModified = filemtime($callbackFile);
-    }
-
-    // Keep connection open and check for file updates
-    while (true) {
-        clearstatcache();
-        if (file_exists($callbackFile)) {
-            $currentModified = filemtime($callbackFile);
-            if ($currentModified > $lastModified) {
-                $data = file_get_contents($callbackFile);
-                echo "data: {$data}\n\n";
-                ob_flush();
-                flush();
-                $lastModified = $currentModified;
-            }
-        }
-        sleep(1);
-        
-        // Break if connection closed
-        if (connection_aborted()) break;
+        echo file_get_contents($callbackFile);
+    } else {
+        echo json_encode([]);
     }
     exit;
 }
@@ -71,7 +93,10 @@ if ($uri === '/events') {
 // Outbound Log Endpoint (from generateTransaction.php)
 if ($uri === '/log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $rawBody = file_get_contents('php://input');
-    file_put_contents($callbackFile, $rawBody);
+    $logData = json_decode($rawBody, true);
+    if ($logData) {
+        logEvent($logData);
+    }
     echo json_encode(['status' => 'success']);
     exit;
 }
@@ -110,8 +135,9 @@ if ($uri === '/callback' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         'body' => $body,
         'endpoint' => '/callback',
         'verificationStatus' => $valid ? 'Valid' : 'Invalid',
+        'id' => uniqid('ev_', true)
     ];
-    file_put_contents($callbackFile, json_encode($sseData));
+    logEvent($sseData);
     
     if (!$valid) {
         http_response_code(400);
@@ -139,7 +165,7 @@ if ($uri === '/callback' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Broadcast again with responseBody
     $sseData['responseBody'] = $responseData;
-    file_put_contents($callbackFile, json_encode($sseData));
+    logEvent($sseData);
     
     echo json_encode($responseData);
     exit;
@@ -176,13 +202,15 @@ if ($uri === '/transfer-va/payment' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = json_decode($rawBody, true);
     
     // Broadcast via file for SSE
-    $sseData = json_encode([
+    $sseData = [
+        'type' => 'inbound',
         'headers' => getallheaders(),
         'body' => $body,
         'endpoint' => '/transfer-va/payment',
         'verificationStatus' => $valid ? 'Valid' : 'Invalid',
-    ]);
-    file_put_contents($callbackFile, $sseData);
+        'id' => uniqid('ev_', true)
+    ];
+    logEvent($sseData);
     
     if (!$valid) {
         http_response_code(401);
@@ -219,7 +247,7 @@ if ($uri === '/transfer-va/payment' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Update broadcast with responseBody
     $sseData['responseBody'] = $responseData;
-    file_put_contents($callbackFile, json_encode($sseData));
+    logEvent($sseData);
 
     echo json_encode($responseData);
     exit;
