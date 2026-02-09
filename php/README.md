@@ -1,17 +1,19 @@
-# Quick Start Guide QRIS Paylabs - PHP
+# Quick Start Guide Paylabs - PHP
 
-Repository ini berisi contoh implementasi integrasi QRIS Paylabs menggunakan PHP.
+Repository ini berisi contoh implementasi integrasi layanan **Paylabs** menggunakan PHP. Modul ini mencakup berbagai jenis transaksi seperti QRIS, SNAP VA, dan transaksi umum lainnya.
 
 ## Fitur
 
-- Pembuatan QRIS (Create QRIS) menggunakan cURL.
-- Signatur otomatis menggunakan RSA-SHA256 sesuai standar Paylabs.
-- Penanganan Callback dengan PHP built-in server.
-- Generasi `requestId` dan Timestamp WIB (+07:00) otomatis.
+- **Dukungan Multi-Layanan**: Pembuatan transaksi QRIS, SNAP VA, dan General Transaction.
+- **Signatur Otomatis**: Logika pembuatan signatur RSA-SHA256 sesuai standar Paylabs (termasuk penanganan SNAP).
+- **Penanganan Callback**: Endpoint untuk menerima dan memverifikasi notifikasi callback.
+- **Konfigurasi Mudah**: Penggunaan file `.env` untuk manajemen kredensial.
+- **Bypass SSL**: Konfigurasi cURL otomatis untuk mengabaikan verifikasi SSL di lingkungan SIT/Sandbox.
 
 ## Persiapan
 
 1. **Install Dependensi:**
+   Pastikan Anda telah menginstal [Composer](https://getcomposer.org/), lalu jalankan:
 
    ```bash
    composer install
@@ -19,83 +21,61 @@ Repository ini berisi contoh implementasi integrasi QRIS Paylabs menggunakan PHP
 
 2. **Konfigurasi Environment:**
    Copy file `.env.example` ke `.env` dan isi dengan kredensial Anda:
-
    ```bash
    cp .env.example .env
    ```
-
-   Edit file `.env`:
-
-   ```env
-   PAYLABS_BASE_URL=https://sit-pay.paylabs.co.id
-   MERCHANT_ID="ID_MERCHANT_ANDA"
-   QRIS_CREATE_ENDPOINT="/payment/v2.3/qris/create"
-   MERCHANT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
-   PAYLABS_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\n..."
-   ```
+   Edit file `.env` dengan `MERCHANT_ID`, `PRIVATE_KEY`, dan `PUBLIC_KEY` Anda.
 
 ## Penggunaan
 
-### 1. Membuat QRIS
+### 1. Membuat Transaksi
 
-Untuk menjalankan script pembuatan QRIS:
+Untuk menjalankan script pembuatan transaksi (default: SNAP VA):
 
 ```bash
-php generateQris.php
+php generateTransaction.php
 ```
 
-Script ini akan menghasilkan link QRIS dan QR Code format teks yang bisa digunakan untuk simulasi pembayaran.
+Anda dapat mengubah jenis transaksi yang dijalankan dengan mengedit bagian akhir file `generateTransaction.php`.
 
 ### 2. Menjalankan Server Callback
 
-Untuk menerima notifikasi status pembayaran dari Paylabs:
+Untuk menerima notifikasi status pembayaran dari Paylabs secara lokal:
 
 ```bash
-php -S localhost:3000
+php -S localhost:3000 verifyCallback.php
 ```
 
-Server akan berjalan di `http://localhost:3000/verifyCallback.php`.
+Server akan melayani endpoint verifikasi di `http://localhost:3000/verifyCallback.php`.
 
 ## Simulasi Callback dengan Ngrok
 
-Karena server callback berjalan di local, Anda memerlukan **ngrok** untuk mengekspos server tersebut ke internet agar Paylabs bisa mengirimkan notifikasi.
+Gunakan **ngrok** untuk mengekspos server lokal Anda ke internet:
 
-1. **Install Ngrok:** (Jika belum)
-   [Download Ngrok](https://ngrok.com/download)
-
-2. **Jalankan Ngrok:**
-   Ekspos port 3000:
-
+1. **Jalankan Ngrok:**
    ```bash
    ngrok http 3000
    ```
-
-3. **Dapatkan URL Publik:**
-   Ngrok akan memberikan URL seperti `https://a1b2-c3d4.ngrok-free.dev`.
-
-4. **Update Notify URL:**
-   Pastikan `notifyUrl` pada `generateQris.php` menggunakan URL ngrok + `/verifyCallback.php`.
-
-5. **Test Callback:**
-   Setelah melakukan pembayaran di lingkungan Sandbox/SIT, Paylabs akan mengirimkan POST request ke URL tersebut.
+2. **Update Notify URL:**
+   Pastikan field `notifyUrl` pada request (`generateTransaction.php`) menggunakan URL ngrok Anda (misal: `https://a1b2.ngrok-free.dev/verifyCallback.php`).
 
 ## Struktur Proyek
 
-- `generateQris.php`: Script untuk melakukan request pembuatan QRIS.
-- `PaylabsSignature.php`: Helper class untuk menangani pembuatan dan verifikasi signatur.
-- `verifyCallback.php`: Endpoint untuk menerima dan memverifikasi notifikasi callback.
-- `composer.json`: Konfigurasi Composer dan dependensi.
-- `.env.example`: Template konfigurasi environment.
+- `generateTransaction.php`: Script utama untuk membuat berbagai jenis transaksi.
+- `PaylabsSignature.php`: Helper class inti untuk signatur, timestamp, dan request cURL.
+- `verifyCallback.php`: Endpoint contoh untuk menerima callback.
+- `composer.json`: Dependensi library (seperti `vlucas/phpdotenv`).
 
 ## FAQ
 
-### 1. Bagaimana cara mengatasi `sign error`?
+### 1. Mengapa muncul error SSL?
 
-Jika Anda mendapatkan error `sign error`, validasi string to sign dan signature Anda menggunakan [Paylabs Signature Playground](https://docs.paylabs.co.id/id/docs/v4.8.1/tools/signature-playground).
+Kami telah menyertakan opsi `CURLOPT_SSL_VERIFYPEER => false` di `PaylabsSignature.php` untuk memudahkan integrasi di sandbox. Pastikan opsi ini ditinjau kembali saat berpindah ke lingkungan Production.
 
-### 2. Mengapa muncul error `Conflict`?
+### 2. Bagaimana cara validasi signatur secara manual?
 
-Error `Conflict` biasanya terjadi karena:
+Gunakan [Paylabs Signature Playground](https://docs.paylabs.co.id/id/docs/v4.8.1/tools/signature-playground) untuk membandingkan `String to Sign` dan hasil `Signature` Anda.
 
-- **Request Dobel**: `merchantTradeNo` atau `requestId` sudah pernah digunakan.
-- **Timestamp Tidak Sesuai**: Pastikan timezone adalah GMT+7 (WIB).
+---
+
+© 2026 Paylabs. All rights reserved.

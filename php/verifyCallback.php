@@ -68,6 +68,14 @@ if ($uri === '/events') {
     exit;
 }
 
+// Outbound Log Endpoint (from generateTransaction.php)
+if ($uri === '/log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $rawBody = file_get_contents('php://input');
+    file_put_contents($callbackFile, $rawBody);
+    echo json_encode(['status' => 'success']);
+    exit;
+}
+
 // Handle Callback
 if ($uri === '/callback' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get headers

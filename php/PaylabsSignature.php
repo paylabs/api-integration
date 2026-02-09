@@ -66,10 +66,8 @@ class PaylabsSignature
         $timestamp = self::generateTimestamp();
         
         $bodyHash = self::sha256Hex(self::minifyJson($body));
-        echo self::minifyJson($body) . "\n";
         
         $stringToSign = "{$method}:{$endpoint}:{$bodyHash}:{$timestamp}";
-        echo "String to Sign: {$stringToSign}\n";
         
         $privateKeyPem = str_replace('\\n', "\n", $privateKeyPem);
         $privateKey = openssl_pkey_get_private($privateKeyPem);
@@ -155,6 +153,8 @@ class PaylabsSignature
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
         $response = curl_exec($ch);
         $respData = json_decode($response, true);
@@ -223,6 +223,8 @@ class PaylabsSignature
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
         $response = curl_exec($ch);
         $respData = json_decode($response, true);
