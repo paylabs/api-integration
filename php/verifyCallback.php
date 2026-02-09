@@ -138,29 +138,10 @@ if ($uri === '/callback' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $body = json_decode($rawBody, true);
     
-    // Broadcast via file for SSE (Initial capture without response body)
-    $sseData = [
-        'type' => 'inbound',
-        'headers' => getallheaders(),
-        'body' => $body,
-        'endpoint' => '/callback',
-        'verificationStatus' => $valid ? 'Valid' : 'Invalid',
-        'id' => uniqid('ev_', true)
-    ];
-    logEvent($sseData);
-    
-    if (!$valid) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Invalid Signature']);
-        exit;
-    }
-    
-    error_log("Signature is valid");
-    
     $requestId = $body['requestId'] ?? '';
     $merchantId = $body['merchantId'] ?? '';
     $status = $body['status'] ?? '';
-    
+
     $responseData = $status !== '02' ? [
         'requestId' => $requestId,
         'errCode' => '1',
@@ -173,9 +154,24 @@ if ($uri === '/callback' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         'merchantId' => $merchantId,
     ];
 
-    // Broadcast again with responseBody
-    $sseData['responseBody'] = $responseData;
-    logEvent($sseData);
+    // Broadcast via file for SSE
+    logEvent([
+        'id' => $requestId ?: uniqid('ev_', true),
+        'type' => 'inbound',
+        'headers' => getallheaders(),
+        'body' => $body,
+        'endpoint' => '/callback',
+        'verificationStatus' => $valid ? 'Valid' : 'Invalid',
+        'responseBody' => $responseData
+    ]);
+    
+    if (!$valid) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid Signature']);
+        exit;
+    }
+    
+    error_log("Signature is valid");
     
     echo json_encode($responseData);
     exit;
@@ -211,25 +207,6 @@ if ($uri === '/transfer-va/payment' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $body = json_decode($rawBody, true);
     
-    // Broadcast via file for SSE
-    $sseData = [
-        'type' => 'inbound',
-        'headers' => getallheaders(),
-        'body' => $body,
-        'endpoint' => '/transfer-va/payment',
-        'verificationStatus' => $valid ? 'Valid' : 'Invalid',
-        'id' => uniqid('ev_', true)
-    ];
-    logEvent($sseData);
-    
-    if (!$valid) {
-        http_response_code(401);
-        echo json_encode(['responseCode' => '4010000', 'responseMessage' => 'Unauthorized']);
-        exit;
-    }
-    
-    error_log("SNAP Signature is valid");
-    
     // Filter allowed fields
     $allowedFields = [
         "paidBills", "virtualAccountNo", "paymentRequestId", "partnerServiceId",
@@ -255,9 +232,26 @@ if ($uri === '/transfer-va/payment' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         'virtualAccountData' => $filteredBody,
     ];
 
-    // Update broadcast with responseBody
-    $sseData['responseBody'] = $responseData;
-    logEvent($sseData);
+    $paymentRequestId = $body['paymentRequestId'] ?? '';
+
+    // Broadcast via file for SSE
+    logEvent([
+        'id' => $paymentRequestId ?: uniqid('ev_', true),
+        'type' => 'inbound',
+        'headers' => getallheaders(),
+        'body' => $body,
+        'endpoint' => '/transfer-va/payment',
+        'verificationStatus' => $valid ? 'Valid' : 'Invalid',
+        'responseBody' => $responseData
+    ]);
+    
+    if (!$valid) {
+        http_response_code(401);
+        echo json_encode(['responseCode' => '4010000', 'responseMessage' => 'Unauthorized']);
+        exit;
+    }
+    
+    error_log("SNAP Signature is valid");
 
     echo json_encode($responseData);
     exit;
@@ -291,16 +285,16 @@ if ($uri === '/api/v1.0/transfer-va/create-va' && $_SERVER['REQUEST_METHOD'] ===
         'responseMessage' => $responseMessage
     ];
 
-    $sseData = [
+    $paymentRequestId = $body['paymentRequestId'] ?? '';
+    logEvent([
+        'id' => $paymentRequestId ?: uniqid('ev_', true),
         'type' => 'inbound',
         'headers' => getallheaders(),
         'body' => $body,
         'endpoint' => '/api/v1.0/transfer-va/create-va',
         'verificationStatus' => $valid ? 'Valid' : 'Invalid',
-        'id' => uniqid('ev_', true),
         'responseBody' => $responseData
-    ];
-    logEvent($sseData);
+    ]);
 
     if (!$valid) {
         http_response_code(401);

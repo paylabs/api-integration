@@ -74,6 +74,7 @@ app.post("/callback", (req, res) => {
   if (!valid) {
     console.log("Invalid Signature");
     broadcast({
+      id: req.body.requestId || require("crypto").randomUUID(),
       type: "inbound",
       headers: req.headers,
       body: req.body,
@@ -98,6 +99,7 @@ app.post("/callback", (req, res) => {
       : { requestId, errCode: "0", errCodeDes: "Success", merchantId };
 
   broadcast({
+    id: requestId || require("crypto").randomUUID(),
     type: "inbound",
     headers: req.headers,
     body: req.body,
@@ -142,6 +144,7 @@ app.post("/api/v1.0/transfer-va/create-va", (req, res) => {
   };
 
   broadcast({
+    id: req.body.paymentRequestId || require("crypto").randomUUID(),
     type: "inbound",
     headers: req.headers,
     body: req.body,
@@ -194,6 +197,7 @@ app.post("/transfer-va/payment", (req, res) => {
   if (!valid) {
     console.log("Invalid SNAP Signature");
     broadcast({
+      id: req.body.paymentRequestId || require("crypto").randomUUID(),
       type: "inbound",
       headers: req.headers,
       body: req.body,
@@ -247,6 +251,7 @@ app.post("/transfer-va/payment", (req, res) => {
   };
 
   broadcast({
+    id: req.body.paymentRequestId || require("crypto").randomUUID(),
     type: "inbound",
     headers: req.headers,
     body: req.body,

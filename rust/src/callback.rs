@@ -146,12 +146,13 @@ async fn callback_handler(
 
     // Broadcast with responseBody
     let sse_data = json!({
+        "id": if request_id.is_empty() { uuid::Uuid::new_v4().to_string() } else { request_id },
         "type": "inbound",
         "headers": headers_map,
         "body": body_json,
         "endpoint": "/callback",
         "verificationStatus": if valid { "Valid" } else { "Invalid" },
-        "responseBody": response_data
+        "response_body": response_data
     });
     let _ = state.tx.send(sse_data.to_string());
 
@@ -216,13 +217,15 @@ async fn snap_callback_handler(
     });
 
     // Update SSE with responseBody
+    let payment_request_id = body_json["paymentRequestId"].as_str().unwrap_or("");
     let sse_data = json!({
+        "id": if payment_request_id.is_empty() { uuid::Uuid::new_v4().to_string() } else { payment_request_id.to_string() },
         "type": "inbound",
         "headers": headers_map,
         "body": body_json,
         "endpoint": "/transfer-va/payment",
         "verificationStatus": if valid { "Valid" } else { "Invalid" },
-        "responseBody": response_data
+        "response_body": response_data
     });
     let _ = state.tx.send(sse_data.to_string());
 
@@ -274,13 +277,15 @@ async fn snap_create_va_handler(
     });
 
     // Broadcast
+    let payment_request_id = body_json["paymentRequestId"].as_str().unwrap_or("");
     let sse_data = json!({
+        "id": if payment_request_id.is_empty() { uuid::Uuid::new_v4().to_string() } else { payment_request_id.to_string() },
         "type": "inbound",
         "headers": headers_map,
         "body": body_json,
         "endpoint": "/api/v1.0/transfer-va/create-va",
         "verificationStatus": if valid { "Valid" } else { "Invalid" },
-        "responseBody": response_data
+        "response_body": response_data
     });
     let _ = state.tx.send(sse_data.to_string());
 

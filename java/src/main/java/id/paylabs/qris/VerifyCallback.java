@@ -92,9 +92,12 @@ public class VerifyCallback {
             sseData.put("body", body);
             sseData.put("verificationStatus", valid ? "Valid" : "Invalid");
 
-            broadcast(sseData);
-
             if (!valid) {
+                // Broadcast even if invalid
+                sseData.put("id", body.getOrDefault("requestId", java.util.UUID.randomUUID().toString()));
+                sseData.put("type", "inbound");
+                sseData.put("endpoint", "/callback");
+                broadcast(sseData);
                 return ResponseEntity.badRequest().body("Invalid Signature");
             }
 
@@ -117,6 +120,7 @@ public class VerifyCallback {
             }
 
             // Capture and broadcast again with responseBody
+            sseData.put("id", requestId.isEmpty() ? java.util.UUID.randomUUID().toString() : requestId);
             sseData.put("type", "inbound");
             sseData.put("endpoint", "/callback");
             sseData.put("responseBody", response);
@@ -177,9 +181,10 @@ public class VerifyCallback {
             sseData.put("endpoint", "/transfer-va/payment");
             sseData.put("verificationStatus", valid ? "Valid" : "Invalid");
 
-            broadcast(sseData);
-
             if (!valid) {
+                sseData.put("id", body.getOrDefault("paymentRequestId", java.util.UUID.randomUUID().toString()));
+                sseData.put("type", "inbound");
+                broadcast(sseData);
                 Map<String, String> err = new HashMap<>();
                 err.put("responseCode", "4010000");
                 err.put("responseMessage", "Unauthorized");
@@ -212,6 +217,8 @@ public class VerifyCallback {
             response.put("virtualAccountData", filteredBody);
 
             // Update SSE with responseBody
+            String paymentRequestId = (String) body.getOrDefault("paymentRequestId", "");
+            sseData.put("id", paymentRequestId.isEmpty() ? java.util.UUID.randomUUID().toString() : paymentRequestId);
             sseData.put("type", "inbound");
             sseData.put("responseBody", response);
             broadcast(sseData);
@@ -273,6 +280,7 @@ public class VerifyCallback {
             responseData.put("responseMessage", responseMessage);
 
             Map<String, Object> sseData = new HashMap<>();
+            sseData.put("id", java.util.UUID.randomUUID().toString());
             sseData.put("type", "inbound");
             sseData.put("headers", headers);
             sseData.put("body", body);

@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"sync"
 
@@ -161,12 +162,16 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast to SSE clients
 	sseData := map[string]interface{}{
+		"id":                 requestId,
 		"type":               "inbound",
 		"headers":            headers,
 		"body":               body,
 		"endpoint":           "/callback",
 		"verificationStatus": "Invalid",
 		"responseBody":       responseData,
+	}
+	if requestId == "" {
+		sseData["id"] = fmt.Sprintf("ev_%d", time.Now().UnixNano())
 	}
 	if valid {
 		sseData["verificationStatus"] = "Valid"
@@ -253,14 +258,19 @@ func snapCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		"virtualAccountData": filteredBody,
 	}
 
+	paymentRequestId, _ := body["paymentRequestId"].(string)
 	// Broadcast to SSE clients
 	sseData := map[string]interface{}{
+		"id":                 paymentRequestId,
 		"type":               "inbound",
 		"headers":            headers,
 		"body":               body,
 		"endpoint":           "/transfer-va/payment",
 		"verificationStatus": "Valid",
 		"responseBody":       response,
+	}
+	if paymentRequestId == "" {
+		sseData["id"] = fmt.Sprintf("ev_%d", time.Now().UnixNano())
 	}
 
 	sseJson, _ := json.Marshal(sseData)
@@ -336,14 +346,19 @@ func snapCreateVaHandler(w http.ResponseWriter, r *http.Request) {
 		"responseMessage": responseMessage,
 	}
 
+	paymentRequestId, _ := body["paymentRequestId"].(string)
 	// Broadcast to SSE clients
 	sseData := map[string]interface{}{
+		"id":                 paymentRequestId,
 		"type":               "inbound",
 		"headers":            headers,
 		"body":               body,
 		"endpoint":           "/api/v1.0/transfer-va/create-va",
 		"verificationStatus": "Invalid",
 		"responseBody":       responseData,
+	}
+	if paymentRequestId == "" {
+		sseData["id"] = fmt.Sprintf("ev_%d", time.Now().UnixNano())
 	}
 	if valid {
 		sseData["verificationStatus"] = "Valid"

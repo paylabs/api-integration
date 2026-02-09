@@ -65,6 +65,9 @@ def callback():
     valid = verify_signature(string_to_verify, signature, public_key)
     
     body = request.get_json()
+    status = body.get('status', '')
+    request_id = body.get('requestId', '')
+    merchant_id = body.get('merchant_id', '')
     
     resp_data = None
     if status != '02':
@@ -83,9 +86,16 @@ def callback():
         }
     
     # Broadcast to SSE with responseBody
-    sse_data['type'] = 'inbound'
-    sse_data['endpoint'] = '/callback'
-    sse_data['responseBody'] = resp_data
+    import uuid
+    sse_data = {
+        'id': request_id if request_id else str(uuid.uuid4()),
+        'type': 'inbound',
+        'headers': dict(request.headers),
+        'body': body,
+        'endpoint': '/callback',
+        'verificationStatus': 'Valid' if valid else 'Invalid',
+        'responseBody': resp_data
+    }
     broadcast(sse_data)
     
     if not valid:
@@ -114,6 +124,17 @@ def snap_callback():
     
     body = request.get_json()
     
+    # Filter Allowed Fields
+    allowed_fields = [
+        "paidBills", "virtualAccountNo", "paymentRequestId", "partnerServiceId",
+        "virtualAccountPhone", "virtualAccountName", "journalNum", "flagAdvise",
+        "trxId", "paymentFlagReason", "virtualAccountEmail", "billDetails",
+        "totalAmount", "customerNo", "paymentType", "paidAmount", "referenceNo",
+        "trxDateTime", "freeTexts", "paymentFlagStatus"
+    ]
+    filtered_body = {k: v for k, v in body.items() if k in allowed_fields}
+    filtered_body['paymentFlagStatus'] = "00"
+    
     resp_data = {
         'responseCode': '2002500',
         'responseMessage': 'Success',
@@ -121,8 +142,17 @@ def snap_callback():
     }
     
     # Broadcast to SSE with responseBody
-    sse_data['type'] = 'inbound'
-    sse_data['responseBody'] = resp_data
+    import uuid
+    payment_request_id = body.get('paymentRequestId', '')
+    sse_data = {
+        'id': payment_request_id if payment_request_id else str(uuid.uuid4()),
+        'type': 'inbound',
+        'headers': dict(request.headers),
+        'body': body,
+        'endpoint': '/transfer-va/payment',
+        'verificationStatus': 'Valid' if valid else 'Invalid',
+        'responseBody': resp_data
+    }
     broadcast(sse_data)
     
     if not valid:
@@ -162,7 +192,10 @@ def snap_create_va():
     }
 
     # Broadcast to SSE
+    import uuid
+    payment_request_id = body.get('paymentRequestId', '')
     sse_data = {
+        'id': payment_request_id if payment_request_id else str(uuid.uuid4()),
         'type': 'inbound',
         'headers': dict(request.headers),
         'body': body,
