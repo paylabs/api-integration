@@ -1,0 +1,14 @@
+# General
+.DS_Store
+.env
+.idea/
+.vscode/
+
+# Java
+target/
+*.class
+*.jar
+*.war
+.classpath
+.project
+.settings/

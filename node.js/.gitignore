@@ -1,0 +1,10 @@
+# General
+.DS_Store
+.env
+.idea/
+.vscode/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log

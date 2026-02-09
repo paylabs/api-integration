@@ -1,0 +1,9 @@
+# General
+.DS_Store
+.env
+.idea/
+.vscode/
+
+# Rust
+target/
+Cargo.lock

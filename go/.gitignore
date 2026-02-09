@@ -1,0 +1,13 @@
+# General
+.DS_Store
+.env
+.idea/
+.vscode/
+
+# Go
+bin/
+pkg/
+*.exe
+*.test
+*.prof
+main

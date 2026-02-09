@@ -1,0 +1,13 @@
+# General
+.DS_Store
+.env
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+env/

@@ -1,0 +1,11 @@
+# General
+.DS_Store
+.env
+.idea/
+.vscode/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo

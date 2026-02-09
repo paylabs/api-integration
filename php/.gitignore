@@ -1,0 +1,9 @@
+# General
+.DS_Store
+.env
+.idea/
+.vscode/
+
+# PHP
+vendor/
+composer.lock
