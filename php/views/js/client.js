@@ -35,20 +35,12 @@ themeToggle.addEventListener("click", () => {
   darkIcon.classList.toggle("hidden");
 });
 
-// Persistence
-function saveToStorage() {
-  localStorage.setItem("paylabs_data", JSON.stringify(dataStore));
-}
-
+// Persistence Logic
 function loadFromStorage() {
   try {
-    const stored = localStorage.getItem("paylabs_data");
+    const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       dataStore = JSON.parse(stored);
-      // Initialize seenIds from storage
-      dataStore.forEach((item) => {
-        if (item.id) seenIds.add(item.id);
-      });
       itemCount = dataStore.length;
       renderAllItems();
     }
@@ -71,11 +63,11 @@ function clearAllData() {
   itemCount = 0;
   localStorage.removeItem(STORAGE_KEY);
   const emptyInbound =
-    '<p class="text-center text-gray-400 dark:text-slate-500 text-sm py-8">No inbound callbacks yet.</p>';
+    '<p class="empty-state text-center text-gray-400 dark:text-slate-500 text-sm py-8">No inbound callbacks yet.</p>';
   const emptyOutbound =
-    '<p class="text-center text-gray-400 dark:text-slate-500 text-sm py-8">No outbound requests yet.</p>';
+    '<p class="empty-state text-center text-gray-400 dark:text-slate-500 text-sm py-8">No outbound requests yet.</p>';
   listAll.innerHTML =
-    '<p class="text-center text-gray-400 dark:text-slate-500 text-sm py-8">No activity yet.</p>';
+    '<div class="empty-state bg-white dark:bg-slate-800 rounded-lg shadow p-8 text-center text-gray-400 dark:text-slate-500 border border-transparent dark:border-slate-700"><p class="text-sm font-medium text-gray-600 dark:text-slate-400">No activity yet.</p></div>';
   listInbound.innerHTML = emptyInbound;
   listOutbound.innerHTML = emptyOutbound;
 }
@@ -110,74 +102,30 @@ tabButtons.forEach((btn) => {
   });
 });
 
-const seenIds = new Set();
-
 function connect() {
-  const poll = async () => {
-    try {
-      const response = await fetch("/events");
-      if (!response.ok) throw new Error("Server error");
+  const eventSource = new EventSource("/events");
 
-      const events = await response.json();
-
-      if (!Array.isArray(events) || events.length === 0) {
-        statusBadge.className =
-          "fixed bottom-4 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg bg-green-500 text-white";
-        statusBadge.textContent = "Connected (Idle)";
-      } else {
-        let storeChanged = false;
-        // Process in reverse to maintain order when unshifting
-        [...events].reverse().forEach((data) => {
-          if (!data.id) return;
-
-          if (!seenIds.has(data.id)) {
-            // New event
-            seenIds.add(data.id);
-            dataStore.unshift(data);
-            addDataItem(data, true);
-            storeChanged = true;
-          } else {
-            // Existing event - check for updates (e.g. responseBody added)
-            const index = dataStore.findIndex((item) => item.id === data.id);
-            if (index !== -1) {
-              const oldData = dataStore[index];
-              // Use stringify to detect any change in the event object
-              if (JSON.stringify(oldData) !== JSON.stringify(data)) {
-                dataStore[index] = data;
-                storeChanged = true;
-                // Update UI: find existing card and replace it
-                const existingCards = document.querySelectorAll(
-                  `[data-event-id="${data.id}"]`,
-                );
-                existingCards.forEach((oldCard) => {
-                  const newCard = createCardElement(data);
-                  oldCard.parentElement.replaceChild(newCard, oldCard);
-                });
-              }
-            }
-          }
-        });
-
-        if (storeChanged) {
-          // Keep only last 50 items
-          if (dataStore.length > 50) dataStore.splice(50);
-          saveToStorage();
-        }
-
-        statusBadge.className =
-          "fixed bottom-4 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg bg-green-500 text-white";
-        statusBadge.textContent = "Connected";
-      }
-    } catch (e) {
-      console.error("Polling error:", e);
-      statusBadge.className =
-        "fixed bottom-4 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg bg-red-500 text-white";
-      statusBadge.textContent = "Disconnected";
-    }
-    setTimeout(poll, 1500); // Poll every 1.5 seconds
+  eventSource.onopen = () => {
+    statusBadge.className =
+      "fixed bottom-4 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg bg-green-500 text-white";
+    statusBadge.textContent = "Connected";
   };
 
-  poll();
+  eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    data.timestamp = new Date().toLocaleTimeString();
+    dataStore.unshift(data);
+    saveToStorage();
+    addDataItem(data, true);
+  };
+
+  eventSource.onerror = () => {
+    statusBadge.className =
+      "fixed bottom-4 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg bg-red-500 text-white";
+    statusBadge.textContent = "Disconnected";
+    eventSource.close();
+    setTimeout(connect, 3000);
+  };
 }
 
 function renderAllItems() {
@@ -188,12 +136,12 @@ function renderAllItems() {
   listOutbound.innerHTML = "";
 
   dataStore.forEach((data, index) => {
-    addDataItem(data, false);
+    addDataItem(data, false, dataStore.length - index);
   });
 }
 
-function createCardElement(data) {
-  const eventId = data.id || "legacy-" + ++itemCount;
+function addDataItem(data, prepend = true, forceId = null) {
+  const id = forceId || ++itemCount;
   const timestamp = data.timestamp || new Date().toLocaleTimeString();
   const isOutbound = data.type === "outbound";
   const typeLabel = isOutbound ? "OUT" : "IN";
@@ -211,63 +159,52 @@ function createCardElement(data) {
     statusBadgeHtml = `<span class="px-1.5 py-0.5 rounded text-xs font-medium ${statusColor}">${data.verificationStatus}</span>`;
   }
 
-  const card = document.createElement("div");
-  card.setAttribute("data-event-id", eventId);
-  card.className =
-    "bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-indigo-900/10 border border-transparent dark:border-slate-700 fade-in overflow-hidden";
-  card.innerHTML = `
-    <div class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
-      <div class="flex items-center gap-2" style="width: 40%;">
-        <svg class="chevron w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-        <span class="px-2 py-0.5 rounded text-xs font-bold ${badgeColor}">${typeLabel}</span>
-        <code class="text-xs text-gray-600 dark:text-slate-300 font-mono">${endpoint}</code>
-        ${statusBadgeHtml}
+  const createCard = () => {
+    const card = document.createElement("div");
+    card.className =
+      "bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-indigo-900/10 border border-transparent dark:border-slate-700 fade-in overflow-hidden";
+    card.innerHTML = `
+      <div class="flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+        <div class="flex items-center gap-2" style="width: 40%;">
+          <svg class="chevron w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          <span class="px-2 py-0.5 rounded text-xs font-bold ${badgeColor}">${typeLabel}</span>
+          <code class="text-xs text-gray-600 dark:text-slate-300 font-mono">${endpoint}</code>
+          ${statusBadgeHtml}
+        </div>
+        <div class="text-right" style="width: 60%;">
+          <span class="text-xs text-gray-400 dark:text-slate-500 font-medium">${timestamp}</span>
+        </div>
       </div>
-      <div class="text-right" style="width: 60%;">
-        <span class="text-xs text-gray-400 dark:text-slate-500 font-medium">${timestamp}</span>
+      <div class="p-4 flex flex-col gap-4 hidden border-t border-gray-50 dark:border-slate-700/50">
+        ${isOutbound ? renderOutbound(data) : renderInbound(data)}
       </div>
-    </div>
-    <div class="p-4 flex flex-col gap-4 hidden border-t border-gray-50 dark:border-slate-700/50">
-      ${isOutbound ? renderOutbound(data) : renderInbound(data)}
-    </div>
-  `;
-  return card;
-}
+    `;
+    return card;
+  };
 
-function addDataItem(data, prepend = true) {
-  const isOutbound = data.type === "outbound";
-
-  const clearEmpty = (listEl) => {
-    // Only clear if we find the specific empty state placeholder
-    const empty =
-      listEl.querySelector(".empty-state") ||
-      listEl.querySelector(".text-center.py-8"); // fallback for the initial p tag
-    if (empty) {
-      listEl.innerHTML = "";
+  const removeEmpty = (listEl, type) => {
+    const placeholder = listEl.querySelector(".empty-state");
+    if (placeholder) {
+      placeholder.remove();
     }
   };
 
-  const card = createCardElement(data);
-
   if (prepend) {
-    clearEmpty(listAll);
-    listAll.prepend(card.cloneNode(true));
+    removeEmpty(listAll, "all");
+    listAll.prepend(createCard());
     if (isOutbound) {
-      clearEmpty(listOutbound);
-      listOutbound.prepend(card.cloneNode(true));
+      removeEmpty(listOutbound, "outbound");
+      listOutbound.prepend(createCard());
     } else {
-      clearEmpty(listInbound);
-      listInbound.prepend(card.cloneNode(true));
+      removeEmpty(listInbound, "inbound");
+      listInbound.prepend(createCard());
     }
   } else {
-    clearEmpty(listAll);
-    listAll.appendChild(card.cloneNode(true));
+    listAll.appendChild(createCard());
     if (isOutbound) {
-      clearEmpty(listOutbound);
-      listOutbound.appendChild(card.cloneNode(true));
+      listOutbound.appendChild(createCard());
     } else {
-      clearEmpty(listInbound);
-      listInbound.appendChild(card.cloneNode(true));
+      listInbound.appendChild(createCard());
     }
   }
 }

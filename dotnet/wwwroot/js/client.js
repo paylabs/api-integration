@@ -63,11 +63,11 @@ function clearAllData() {
   itemCount = 0;
   localStorage.removeItem(STORAGE_KEY);
   const emptyInbound =
-    '<p class="text-center text-gray-400 dark:text-slate-500 text-sm py-8">No inbound callbacks yet.</p>';
+    '<p class="empty-state text-center text-gray-400 dark:text-slate-500 text-sm py-8">No inbound callbacks yet.</p>';
   const emptyOutbound =
-    '<p class="text-center text-gray-400 dark:text-slate-500 text-sm py-8">No outbound requests yet.</p>';
+    '<p class="empty-state text-center text-gray-400 dark:text-slate-500 text-sm py-8">No outbound requests yet.</p>';
   listAll.innerHTML =
-    '<p class="text-center text-gray-400 dark:text-slate-500 text-sm py-8">No activity yet.</p>';
+    '<div class="empty-state bg-white dark:bg-slate-800 rounded-lg shadow p-8 text-center text-gray-400 dark:text-slate-500 border border-transparent dark:border-slate-700"><p class="text-sm font-medium text-gray-600 dark:text-slate-400">No activity yet.</p></div>';
   listInbound.innerHTML = emptyInbound;
   listOutbound.innerHTML = emptyOutbound;
 }
@@ -183,12 +183,9 @@ function addDataItem(data, prepend = true, forceId = null) {
   };
 
   const removeEmpty = (listEl, type) => {
-    if (
-      dataStore.length === 1 ||
-      listEl.querySelector("p") ||
-      listEl.querySelector(".empty-state")
-    ) {
-      listEl.innerHTML = "";
+    const placeholder = listEl.querySelector(".empty-state");
+    if (placeholder) {
+      placeholder.remove();
     }
   };
 
