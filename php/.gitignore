@@ -7,3 +7,4 @@
 # PHP
 vendor/
 composer.lock
+last_callback.json
