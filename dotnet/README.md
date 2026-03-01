@@ -56,6 +56,27 @@ dotnet run callback
 
 Server akan berjalan di `http://localhost:3000/callback`.
 
+### Menjalankan dengan runner (`run.sh` / `run.bat`)
+
+Disediakan runner singkat di folder `dotnet` untuk mempermudah menjalankan projek:
+
+- Unix/macOS:
+
+```bash
+chmod +x run.sh
+./run.sh           # restore, build, dan jalankan (generate)
+./run.sh callback  # jalankan dengan argumen 'callback'
+```
+
+- Windows (cmd.exe):
+
+```powershell
+run.bat            # restore, build, dan jalankan (generate)
+run.bat callback   # jalankan dengan argumen 'callback'
+```
+
+Runner akan menjalankan `dotnet restore` dan `dotnet build` sebelum menjalankan aplikasi.
+
 ## Simulasi Callback dengan Ngrok
 
 Karena server callback berjalan di local, Anda memerlukan **ngrok** untuk mengekspos server tersebut ke internet agar Paylabs bisa mengirimkan notifikasi.
