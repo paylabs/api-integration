@@ -49,7 +49,7 @@ Repository ini berisi contoh implementasi integrasi QRIS Paylabs menggunakan Pyt
 Untuk menjalankan script pembuatan QRIS:
 
 ```bash
-python generate_qris.py
+python generate_transaction.py
 ```
 
 Script ini akan menghasilkan link QRIS dan QR Code format teks yang bisa digunakan untuk simulasi pembayaran.
@@ -63,6 +63,27 @@ python verify_callback.py
 ```
 
 Server akan berjalan di `http://localhost:3000/callback`.
+
+### Menjalankan dengan runner (`run.sh` / `run.bat`)
+
+Kedua runner yang disediakan akan membuat virtual environment (`venv`), menginstall dependensi dari `requirements.txt`, lalu menjalankan skrip yang dipilih.
+
+- Unix/macOS:
+
+```bash
+chmod +x run.sh
+./run.sh         # jalankan generate_transaction.py
+./run.sh callback # jalankan verify_callback.py
+```
+
+- Windows (cmd.exe):
+
+```powershell
+run.bat          # jalankan generate_transaction.py
+run.bat callback # jalankan verify_callback.py
+```
+
+Catatan: jika ingin tetap menggunakan perintah langsung, Anda tetap bisa menjalankan `python generate_transaction.py` atau `python verify_callback.py`.
 
 ## Simulasi Callback dengan Ngrok
 
